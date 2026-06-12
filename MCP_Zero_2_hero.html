@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP — Model Context Protocol · Zero to Hero | AI Innovation Summit 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jd-green: #378b29;
+  --jd-green-bright: #44a340;
+  --yellow: #ffde00;
+  --yellow-soft: #fff3b0;
+  --bg: #0a0c10;
+  --bg-elevated: #12151c;
+  --bg-card: #181c26;
+  --bg-card-hover: #1e2336;
+  --text: #ffffff;
+  --text-muted: #c8ccd6;
+  --text-dim: #8b92a8;
+  --accent: #4fc3f7;
+  --accent2: #ab47bc;
+  --accent3: #ff7043;
+  --danger: #ef5350;
+  --success: #66bb6a;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-glow: 0 0 40px rgba(255,222,0,0.2);
+  --font: 'Inter', -apple-system, sans-serif;
+  --display: 'Space Grotesk', 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; font-size: 17px; overflow-x: hidden; }
+
+/* ===== NAV & PROGRESS ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(10,12,16,0.85); backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border); padding: 0 2.5rem; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+nav .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.95rem; color: var(--yellow); font-family: var(--display); flex-shrink: 0; }
+nav .brand svg { width: 26px; height: 26px; }
+nav .nav-links {
+  display: flex; gap: 2px; list-style: none;
+  flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; -ms-overflow-style: none;
+  max-width: 100%;
+}
+nav .nav-links::-webkit-scrollbar { display: none; }
+nav .nav-links li { flex-shrink: 0; }
+nav .nav-links a {
+  color: var(--text-muted); text-decoration: none;
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 0.8rem; font-weight: 500; transition: var(--transition);
+  white-space: nowrap;
+}
+nav .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+nav .nav-links a.active { color: var(--yellow); background: rgba(255,222,0,0.12); }
+.progress-bar {
+  position: fixed; top: 64px; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--jd-green-bright), var(--yellow));
+  z-index: 1001; transition: width 0.15s; box-shadow: 0 0 12px rgba(255,222,0,0.5);
+}
+
+/* ===== LAYOUT ===== */
+section { max-width: 1140px; margin: 0 auto; padding: 3rem; text-align: left; }
+.section-divider { max-width: 1140px; margin: 0 auto; padding: 4rem 3rem 2rem; }
+.section-divider .section-number {
+  font-size: 6rem; font-weight: 900; color: var(--yellow);
+  opacity: 0.85; line-height: 1; letter-spacing: -0.04em; font-family: var(--display);
+}
+.section-divider h2 {
+  font-size: 3.5rem; font-weight: 900; margin-top: 0.25rem;
+  letter-spacing: -0.03em; color: var(--jd-green-bright); font-family: var(--display);
+}
+.section-divider p { color: var(--text-muted); font-size: 1.15rem; max-width: 720px; margin-top: 1rem; }
+
+h1, h2, h3, h4 { font-family: var(--display); }
+h1 { font-size: 3.5rem; font-weight: 700; line-height: 1.05; color: var(--jd-green-bright); }
+h2 { font-size: 2.8rem; font-weight: 700; color: var(--jd-green-bright); }
+h3 { font-size: 1.5rem; font-weight: 700; color: var(--jd-green-bright); }
+h4 { font-size: 1.15rem; font-weight: 600; color: var(--text); }
+
+.subtitle { color: var(--text-muted); font-size: 1.2rem; margin-top: 0.75rem; max-width: 760px; }
+code { font-family: var(--mono); color: var(--yellow); font-size: 0.9em; }
+
+/* ===== HERO ===== */
+.hero {
+  min-height: 70vh; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+  padding: 6rem 3rem; max-width: 1140px; margin: 0 auto; position: relative;
+}
+.hero::before {
+  content: ''; position: fixed; top: -30%; right: -20%;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(255,222,0,0.06) 0%, transparent 60%);
+  animation: heroPulse 10s ease-in-out infinite; pointer-events: none;
+}
+.hero::after {
+  content: ''; position: fixed; bottom: -20%; left: -10%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(68,163,64,0.05) 0%, transparent 60%);
+  animation: heroPulse 12s ease-in-out infinite reverse; pointer-events: none;
+}
+@keyframes heroPulse {
+  0%,100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  background: linear-gradient(135deg, var(--jd-green-bright) 0%, var(--yellow) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: -0.04em; line-height: 1;
+}
+.hero h1 .h1-sub {
+  display: inline-block;
+  font-size: 0.32em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  margin-left: 0.4em;
+  -webkit-text-fill-color: var(--text-muted);
+  background: none;
+  opacity: 0.95;
+}
+.hero .subtitle { font-size: 1.35rem; max-width: 720px; margin-top: 1.25rem; }
+.session-info { display: flex; gap: 1.25rem; margin-top: 3.5rem; flex-wrap: wrap; }
+.session-stat {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem 2rem; text-align: center;
+  box-shadow: var(--shadow-card); transition: var(--transition);
+}
+.session-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.5), var(--shadow-glow); }
+.session-stat .number { font-size: 2.5rem; font-weight: 900; color: var(--yellow); font-family: var(--display); line-height: 1; }
+.session-stat .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ===== SVG SHARED ===== */
+.svg-text { font-family: var(--display); font-size: 13px; fill: #fff; font-weight: 600; }
+.svg-text-sm { font-family: var(--mono); font-size: 11px; fill: #c8ccd6; }
+.svg-edge { stroke: #5a6175; stroke-width: 1.4; fill: none; }
+.svg-edge-active {
+  stroke: #ffde00; stroke-width: 1.8; fill: none;
+  stroke-dasharray: 5 4; animation: dashflow 1.4s linear infinite;
+}
+@keyframes dashflow { to { stroke-dashoffset: -36; } }
+.svg-pulse { animation: nodePulse 2.2s ease-in-out infinite; }
+@keyframes nodePulse {
+  0%,100% { filter: drop-shadow(0 0 0 rgba(255,222,0,0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(255,222,0,0.7)); }
+}
+
+/* ===== COMPARISON CARDS ===== */
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0 3rem; }
+@media (max-width: 900px) { .cmp-grid { grid-template-columns: 1fr; } }
+.cmp-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.6rem 1.7rem; }
+.cmp-card.bad { border-left: 3px solid var(--danger); }
+.cmp-card.good { border-left: 3px solid var(--success); }
+.cmp-card h4 { font-size: 1.05rem; margin-bottom: 0.6rem; letter-spacing: 0.4px; }
+.cmp-card.bad h4 { color: var(--danger); }
+.cmp-card.good h4 { color: var(--success); }
+.cmp-card .icon { font-size: 1.4rem; margin-right: 0.4rem; }
+.cmp-card ul { list-style: none; margin-top: 0.6rem; }
+.cmp-card li { padding: 0.4rem 0 0.4rem 1.4rem; position: relative; font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; }
+.cmp-card.bad li::before { content: '✗'; color: var(--danger); position: absolute; left: 0; font-weight: 700; }
+.cmp-card.good li::before { content: '✓'; color: var(--success); position: absolute; left: 0; font-weight: 700; }
+
+/* ===== FAILURE-MODE / QUESTION CARDS ===== */
+.fail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 2rem 0 2.5rem; }
+@media (max-width: 900px) { .fail-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .fail-grid { grid-template-columns: 1fr; } }
+.fail-q { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.1rem; transition: transform 0.2s, border-color 0.2s; }
+.fail-q:hover { transform: translateY(-3px); border-color: var(--yellow); }
+.fail-q .qnum { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--yellow); color: #0a0c10; font-family: var(--mono); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.7rem; }
+.fail-q h5 { font-family: var(--display); color: var(--yellow); font-size: 0.95rem; margin-bottom: 0.4rem; }
+.fail-q p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ===== PIPELINE / DIAGRAM BLOCK ===== */
+.pipeline-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin: 2rem 0; box-shadow: var(--shadow-card); overflow-x: auto; }
+.pipeline-wrap h4 { font-family: var(--display); color: var(--yellow); font-size: 1.1rem; margin-bottom: 1rem; text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+.pipeline-wrap svg { display: block; width: 100%; min-width: 760px; height: auto; }
+
+/* ===== USECASE HIGHLIGHT ===== */
+.usecase { background: linear-gradient(135deg, rgba(68,163,64,0.08), rgba(255,222,0,0.05)); border: 1px solid rgba(255,222,0,0.2); border-radius: 10px; padding: 0.9rem 1rem; margin: 0.9rem 0; }
+.usecase .uc-label { font-family: var(--mono); font-size: 0.7rem; color: var(--yellow); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+.usecase .uc-title { font-family: var(--display); font-weight: 700; color: var(--text); font-size: 0.98rem; margin-bottom: 0.3rem; }
+.usecase p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ===== CODE BLOCKS ===== */
+.code-block { background: #050608; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; margin-top: 0.9rem; font-family: var(--mono); font-size: 0.78rem; line-height: 1.65; color: #e6e8ee; overflow-x: auto; position: relative; }
+.code-block.python::before { content: 'python'; position: absolute; top: 8px; right: 12px; font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.code-block.json::before { content: 'json'; position: absolute; top: 8px; right: 12px; font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.code-block.bash::before { content: 'shell'; position: absolute; top: 8px; right: 12px; font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.code-block .kw { color: #ff7043; }
+.code-block .str { color: #ffde00; }
+.code-block .fn { color: #4fc3f7; }
+.code-block .cm { color: #6a7080; font-style: italic; }
+.code-block .num { color: #ab47bc; }
+
+/* ===== COMPARISON TABLE ===== */
+.cmp-table-wrap { overflow-x: auto; margin: 2rem 0; border-radius: 14px; border: 1px solid var(--border); }
+.cmp-table { width: 100%; border-collapse: collapse; background: var(--bg-card); min-width: 700px; }
+.cmp-table th, .cmp-table td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.cmp-table th { background: rgba(255,222,0,0.06); color: var(--yellow); font-family: var(--display); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.cmp-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.cmp-table td:first-child { font-weight: 600; color: var(--text); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-family: var(--mono); font-weight: 600; }
+.badge.green { background: rgba(102,187,106,0.15); color: var(--success); }
+.badge.yellow { background: rgba(255,222,0,0.15); color: var(--yellow); }
+.badge.red { background: rgba(239,83,80,0.15); color: var(--danger); }
+.badge.blue { background: rgba(79,195,247,0.15); color: var(--accent); }
+
+/* ===== UC GRID ===== */
+.uc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; margin-top: 2rem; }
+.uc-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem 1.4rem; transition: var(--transition); position: relative; overflow: hidden; }
+.uc-card:hover { transform: translateY(-4px); border-color: rgba(255,222,0,0.3); box-shadow: 0 12px 36px rgba(0,0,0,0.5), var(--shadow-glow); }
+.uc-card .uc-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+.uc-card h4 { color: var(--jd-green-bright); margin-bottom: 0.4rem; font-size: 1.15rem; }
+.uc-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; }
+.uc-card .tags { display: flex; gap: 0.4rem; margin-top: 0.85rem; flex-wrap: wrap; }
+.uc-card .tag { background: rgba(79,195,247,0.1); color: var(--accent); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-family: var(--mono); }
+.uc-card .uc-real { display: block; margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px dashed var(--border); font-size: 0.75rem; color: var(--text-dim); }
+.uc-card .uc-real strong { color: var(--yellow); }
+
+/* ===== STEPS ===== */
+.steps { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; }
+.step { display: grid; grid-template-columns: 60px 1fr; gap: 1.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem 1.3rem; border-left: 3px solid var(--yellow); }
+.step .step-num { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--jd-green-bright), var(--yellow)); color: #0a0c10; font-weight: 900; font-family: var(--display); font-size: 1.3rem; display: flex; align-items: center; justify-content: center; }
+.step h4 { color: var(--yellow); margin-bottom: 0.4rem; font-size: 1.05rem; }
+.step p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.55; }
+.step .step-detail { background: #050608; border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem 0.9rem; margin-top: 0.6rem; font-family: var(--mono); font-size: 0.78rem; color: #e6e8ee; overflow-x: auto; }
+.step .step-detail .out { color: var(--success); }
+.step .step-detail .lbl { color: var(--text-dim); }
+
+/* ===== PITFALLS ===== */
+.pitfall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 2rem 0; }
+.pitfall { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--danger); border-radius: 12px; padding: 1.2rem 1.3rem; }
+.pitfall h4 { color: var(--danger); font-size: 0.98rem; margin-bottom: 0.4rem; }
+.pitfall h4::before { content: '⚠ '; }
+.pitfall p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
+.pitfall .fix { display: block; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); font-size: 0.78rem; color: var(--success); }
+.pitfall .fix strong { color: var(--success); }
+
+/* ===== PRIMITIVE / FEATURE CARD ===== */
+.prim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin: 2rem 0; }
+@media (max-width: 900px) { .prim-grid { grid-template-columns: 1fr; } }
+.prim-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem 1.5rem; position: relative; }
+.prim-card.tool { border-top: 3px solid var(--accent); }
+.prim-card.resource { border-top: 3px solid var(--jd-green-bright); }
+.prim-card.prompt { border-top: 3px solid var(--accent2); }
+.prim-card .ctrl { position: absolute; top: 12px; right: 12px; font-family: var(--mono); font-size: 0.65rem; padding: 2px 7px; border-radius: 4px; }
+.prim-card.tool .ctrl { background: rgba(79,195,247,0.15); color: var(--accent); }
+.prim-card.resource .ctrl { background: rgba(68,163,64,0.15); color: var(--jd-green-bright); }
+.prim-card.prompt .ctrl { background: rgba(171,71,188,0.15); color: var(--accent2); }
+.prim-card .prim-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.prim-card h4 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.prim-card .prim-sub { color: var(--text-dim); font-size: 0.8rem; font-family: var(--mono); margin-bottom: 0.7rem; }
+.prim-card p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; }
+.prim-card ul { list-style: none; margin-top: 0.6rem; }
+.prim-card li { padding: 0.3rem 0 0.3rem 1.2rem; position: relative; font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; }
+.prim-card li::before { content: '▸'; color: var(--yellow); position: absolute; left: 0.3rem; font-weight: 700; }
+
+/* ===== FOOTER ===== */
+footer { max-width: 1140px; margin: 4rem auto 2rem; padding: 2.5rem 3rem; border-top: 1px solid var(--border); text-align: center; }
+footer p { color: var(--text-dim); font-size: 0.85rem; }
+footer a { color: var(--yellow); text-decoration: none; }
+
+/* ===== ANIMATIONS ===== */
+.fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== 14" LAPTOP (1366×768 / 1440×900) and smaller desktops ===== */
+@media (max-width: 1280px) {
+  nav { padding: 0 1rem; height: 58px; }
+  nav .brand { font-size: 0.85rem; }
+  nav .brand svg { width: 22px; height: 22px; }
+  nav .nav-links a { padding: 6px 9px; font-size: 0.72rem; }
+  .progress-bar { top: 58px; }
+
+  section { padding: 2rem 1.75rem; }
+  .section-divider { padding: 2.75rem 1.75rem 1.5rem; }
+  .section-divider .section-number { font-size: 4.5rem; }
+  .section-divider h2 { font-size: 2.6rem; }
+  .section-divider p { font-size: 1.05rem; }
+
+  .hero { padding: 4.5rem 1.75rem; min-height: 60vh; }
+  .hero .subtitle { font-size: 1.15rem; }
+  .session-stat { padding: 1.1rem 1.5rem; }
+  .session-stat .number { font-size: 2rem; }
+
+  h2 { font-size: 2.2rem; }
+  h3 { font-size: 1.3rem; }
+
+  footer { padding: 2rem 1.75rem; }
+
+  /* Ensure wide SVG / table blocks don't push the page sideways */
+  .pipeline-wrap { padding: 1.1rem; }
+  .pipeline-wrap svg { min-width: 680px; }
+  .cmp-table { min-width: 600px; }
+
+  .panel-grid { padding: 1.3rem; gap: 1.1rem; }
+}
+
+/* ===== TABLET / SMALL LAPTOP ===== */
+@media (max-width: 1024px) {
+  .section-divider .section-number { font-size: 3.8rem; }
+  .section-divider h2 { font-size: 2.2rem; }
+  .hero h1 { letter-spacing: -0.03em; }
+  .panel-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  nav { padding: 0 0.75rem; }
+  nav .nav-links { display: none; }
+  section, .section-divider, .hero, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  h2 { font-size: 1.9rem; }
+  .section-divider h2 { font-size: 2rem; }
+  .section-divider .section-number { font-size: 3.2rem; }
+  .session-info { flex-direction: column; }
+  .hero { padding-top: 4rem; padding-bottom: 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>
+    <span>MCP — Model Context Protocol · Zero to Hero</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#why">Why</a></li>
+    <li><a href="#what">What is MCP</a></li>
+    <li><a href="#primer">Primer</a></li>
+    <li><a href="#vs">vs RAG</a></li>
+    <li><a href="#arch">Architecture</a></li>
+    <li><a href="#primitives">Primitives</a></li>
+    <li><a href="#client">Client Features</a></li>
+    <li><a href="#lifecycle">Lifecycle</a></li>
+    <li><a href="#claude">Claude Demo</a></li>
+    <li><a href="#future">Composability</a></li>
+    <li><a href="#webmcp">WebMCP</a></li>
+    <li><a href="#security">Security</a></li>
+    <li><a href="#pitfalls">Pitfalls</a></li>
+    <li><a href="#next">2026 RC</a></li>
+  </ul>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <h1>MCP<span class="h1-sub">(Zero to Hero)</span></h1>
+  <p class="subtitle">
+    The <strong>Model Context Protocol</strong> — Anthropic's open standard for plugging
+    LLMs into the real world. One protocol replaces every bespoke tool integration. From
+    the N×M problem to a working Claude Desktop server, end-to-end and visualised.
+  </p>
+  <div class="session-info">
+    <div class="session-stat"><div class="number">3</div><div class="label">Roles (Host · Client · Server)</div></div>
+    <div class="session-stat"><div class="number">3</div><div class="label">Server Primitives</div></div>
+    <div class="session-stat"><div class="number">2</div><div class="label">Client Features</div></div>
+    <div class="session-stat"><div class="number">JSON-RPC</div><div class="label">2.0 Transport</div></div>
+    <div class="session-stat"><div class="number">2024-11</div><div class="label">Spec Revision</div></div>
+  </div>
+</header>
+
+<!-- ============================================================
+     SECTION 01 — WHY MCP?
+============================================================ -->
+<div class="section-divider fade-in" id="why">
+  <div class="section-number">01</div>
+  <h2>Why MCP exists</h2>
+  <p>Every AI app needs the same things — files, databases, APIs, memory. Before MCP, every
+  team rebuilt those integrations from scratch in incompatible ways. MCP is the USB-C port
+  for AI: one connector, every device.</p>
+</div>
+
+<section class="fade-in">
+  <h3>The four pain points MCP was built to fix</h3>
+  <div class="fail-grid">
+    <div class="fail-q">
+      <div class="qnum">1</div>
+      <h5>Fragmented integrations</h5>
+      <p>Every AI client (Cursor, Claude Desktop, VS Code) wrote a custom connector for every tool. Same logic, rebuilt N times.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">2</div>
+      <h5>The N × M problem</h5>
+      <p>N clients × M tools = N×M custom integrations to write and maintain. A 10×50 ecosystem means 500 bespoke connectors.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">3</div>
+      <h5>Inconsistent context plumbing</h5>
+      <p>Each team invented its own prompt format, tool-call schema, and auth flow. Nothing was portable across apps.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">4</div>
+      <h5>Stateless tool binding</h5>
+      <p>LangChain-style <code>bind_tools()</code> re-declares tools per session. No central registry, no shared lifecycle, no discoverability.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:2rem;">Before MCP vs With MCP — the integration math</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">🕸</span>Before MCP — the N × M tangle</h4>
+      <ul>
+        <li>Each AI app implements its own GitHub connector, its own Slack connector, its own Postgres connector…</li>
+        <li>Tool authors must ship a different SDK for every client</li>
+        <li>Changing one API breaks dozens of bespoke clients</li>
+        <li>No standard for auth, schema discovery, or capability negotiation</li>
+        <li>Adding a new tool to your IDE means waiting for the IDE vendor to ship support</li>
+        <li>10 clients × 50 tools = <strong>500</strong> hand-written integrations</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔌</span>With MCP — the N + M plug-and-play</h4>
+      <ul>
+        <li>Each tool ships <strong>one</strong> MCP server, usable by every MCP-compatible client</li>
+        <li>Each AI app implements <strong>one</strong> MCP client, usable with every MCP server</li>
+        <li>10 clients + 50 tools = <strong>60</strong> implementations — and they all interoperate</li>
+        <li>JSON-RPC 2.0 + capability negotiation = standard discovery</li>
+        <li>OAuth 2.0 (remote servers) = standard auth</li>
+        <li>Build once, adopted everywhere — like LSP did for IDEs and programming languages</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The Core Insight</div>
+    <div class="uc-title">MCP = LSP for AI agents</div>
+    <p>The Language Server Protocol let one Python plugin work in VS Code, Vim, Emacs, JetBrains — instead of N editors × M languages. MCP does the exact same trick for AI: one Slack MCP server works in Claude Desktop, Cursor, Windsurf, Cline, Goose, and any future client — instead of every AI app maintaining its own Slack integration.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 02 — WHAT IS MCP (expanded deep dive)
+============================================================ -->
+<div class="section-divider fade-in" id="what">
+  <div class="section-number">02</div>
+  <h2>What is MCP, really?</h2>
+  <p>Three words doing three jobs. <strong>Model</strong> is the LLM. <strong>Context</strong>
+  is everything outside the model's training data. <strong>Protocol</strong> is the standardised
+  JSON-RPC 2.0 conversation that bridges them. Released by Anthropic in November 2024
+  (designed by Mahesh Murag); fully implemented as Python and TypeScript SDKs; already supported
+  by Cursor, Windsurf, Cline, Claude Desktop, Claude Code, and a growing list of agents.</p>
+</div>
+
+<section class="fade-in">
+  <h3>The three words — unpacked</h3>
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <div class="prim-icon">🤖</div>
+      <h4>Model</h4>
+      <div class="prim-sub">the LLM at the heart</div>
+      <p>GPT, Claude, Llama, DeepSeek — whatever reasoning engine drives your app. Powerful, but boxed in by training-cutoff knowledge and a finite context window. Without external help it can only talk about the world it saw during training.</p>
+    </div>
+    <div class="prim-card resource">
+      <div class="prim-icon">🧠</div>
+      <h4>Context</h4>
+      <div class="prim-sub">everything outside the weights</div>
+      <p>Files, database rows, API responses, user preferences, conversation history, RAG retrievals. The <em>extra information</em> the model needs to answer correctly. Generative AI quality is bounded almost entirely by how good your context-management is.</p>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">📡</div>
+      <h4>Protocol</h4>
+      <div class="prim-sub">JSON-RPC 2.0 over stdio / HTTP+SSE</div>
+      <p>The standardised conversation. Defines how a client lists tools, calls them, subscribes to changes, and negotiates capabilities — once, for the entire ecosystem. No more bespoke wire formats per integration.</p>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Anthropic's one-liner</div>
+    <div class="uc-title">"A USB-C port for AI applications"</div>
+    <p>HTTP standardised how browsers talk to servers. LSP (Language Server Protocol) standardised how editors talk to language tooling. MCP standardises how AI applications talk to external data and tools. Same shape of solution — one wire format, infinite peripherals. MCP explicitly takes its design inspiration from LSP.</p>
+  </div>
+
+  <h3>Why "context" is the whole game</h3>
+  <p>Out of the box, every generative model is limited by its <strong>pre-training cutoff</strong>, its <strong>token window</strong>, and its <strong>conversation history</strong>. The way to push past those limits is to feed it the right context, on demand. MCP is a protocol for doing that feeding in a structured, standardised, secure way.</p>
+  <div class="cmp-grid">
+    <div class="cmp-card good">
+      <h4><span class="icon">📝</span>Where context comes from — by modality</h4>
+      <ul>
+        <li><strong>Text models</strong> (GPT, Claude, Llama) — prompt, token window, chat history, RAG</li>
+        <li><strong>Image / multimodal</strong> (DALL·E, Gemini) — text description + visual reference</li>
+        <li><strong>Code models</strong> (Codex, DeepSeek-Coder) — surrounding code, language syntax, API docs</li>
+        <li><strong>Speech / audio</strong> (Whisper, AudioPaLM) — prior audio segments, acoustic features</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔄</span>Why <em>agents</em> make context dynamic</h4>
+      <ul>
+        <li>Agents don't get one fixed prompt — they decide <em>at runtime</em> what context they need</li>
+        <li>They search data sources, request specific records, chain follow-up calls</li>
+        <li>Each external system used to need its own bespoke connector</li>
+        <li>MCP is the standard wire those agents speak when they reach out</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>The fragmentation problem MCP retires</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">🕸</span>Before MCP — the N×M tax</h4>
+      <ul>
+        <li>Every AI app wrote bespoke glue for every tool / data source</li>
+        <li>Each data source emitted messages in its own shape (or no protocol at all)</li>
+        <li>Inconsistent prompt logic + tool-calling conventions across teams &amp; vendors</li>
+        <li><em>N</em> client apps × <em>M</em> tools = <em>N×M</em> custom integrations to build and maintain</li>
+        <li>Switch the AI app — rewrite everything. Bump a tool's API — hunt every caller.</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔌</span>After MCP — N + M plug-ins</h4>
+      <ul>
+        <li>Each AI app implements the MCP client side <em>once</em></li>
+        <li>Each tool / data source ships an MCP server <em>once</em></li>
+        <li>Any compliant client ↔ any compliant server, with zero extra glue</li>
+        <li>MCP becomes the fungibility layer between AI clients and capability providers</li>
+        <li>Open standard — not owned by any single AI vendor</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>What MCP standardises (in one breath)</h3>
+  <div class="prim-grid">
+    <div class="prim-card resource">
+      <div class="prim-icon">📂</div>
+      <h4>Sharing context with the model</h4>
+      <div class="prim-sub">via <code>resources/*</code></div>
+      <p>Servers expose data — files, DB schemas, wiki pages, API responses — each addressable by URI. Hosts decide how to surface them: tree view, search, auto-include by heuristic. <strong>Application-driven.</strong></p>
+    </div>
+    <div class="prim-card tool">
+      <div class="prim-icon">🔧</div>
+      <h4>Exposing tools to AI systems</h4>
+      <div class="prim-sub">via <code>tools/*</code></div>
+      <p>Servers publish named functions with JSON-Schema. The LLM autonomously picks when to call which. Discovery (<code>tools/list</code>), invocation (<code>tools/call</code>), change notifications — all standardised. <strong>Model-controlled.</strong></p>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">📝</div>
+      <h4>Building composable workflows</h4>
+      <div class="prim-sub">via <code>prompts/*</code></div>
+      <p>Servers ship pre-baked prompt templates (typically slash-commands) that users explicitly pick. Combined with composability (clients-as-servers), you can build agent hierarchies that delegate. <strong>User-controlled.</strong></p>
+    </div>
+  </div>
+
+  <h3>The four MCP roles (preview of the next section)</h3>
+  <div class="pipeline-wrap">
+    <h4>Host → Client → Server → Capability</h4>
+    <svg viewBox="0 0 1000 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrW0" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+      </defs>
+      <!-- Host -->
+      <rect x="30" y="60" width="210" height="100" rx="10" fill="rgba(255,222,0,0.06)" stroke="#ffde00" stroke-width="1.8"/>
+      <text x="135" y="95" text-anchor="middle" class="svg-text" fill="#ffde00">HOST</text>
+      <text x="135" y="118" text-anchor="middle" class="svg-text-sm">AI app the user opens</text>
+      <text x="135" y="136" text-anchor="middle" class="svg-text-sm">Claude Desktop · Cursor · IDE</text>
+      <!-- Client -->
+      <rect x="290" y="60" width="190" height="100" rx="10" fill="rgba(79,195,247,0.06)" stroke="#4fc3f7" stroke-width="1.8"/>
+      <text x="385" y="95" text-anchor="middle" class="svg-text" fill="#4fc3f7">CLIENT</text>
+      <text x="385" y="118" text-anchor="middle" class="svg-text-sm">1 client ↔ 1 server</text>
+      <text x="385" y="136" text-anchor="middle" class="svg-text-sm">JSON-RPC session, isolated</text>
+      <!-- Server -->
+      <rect x="530" y="60" width="200" height="100" rx="10" fill="rgba(68,163,64,0.06)" stroke="#44a340" stroke-width="1.8"/>
+      <text x="630" y="95" text-anchor="middle" class="svg-text" fill="#44a340">SERVER</text>
+      <text x="630" y="118" text-anchor="middle" class="svg-text-sm">one capability wrapped</text>
+      <text x="630" y="136" text-anchor="middle" class="svg-text-sm">filesystem · Git · DB · Slack</text>
+      <!-- Primitive -->
+      <rect x="780" y="60" width="190" height="100" rx="10" fill="rgba(171,71,188,0.08)" stroke="#ab47bc" stroke-width="1.8"/>
+      <text x="875" y="95" text-anchor="middle" class="svg-text" fill="#ab47bc">PRIMITIVE</text>
+      <text x="875" y="118" text-anchor="middle" class="svg-text-sm">tool / resource / prompt</text>
+      <text x="875" y="136" text-anchor="middle" class="svg-text-sm">what the server actually offers</text>
+
+      <line x1="240" y1="110" x2="290" y2="110" class="svg-edge-active" marker-end="url(#arrW0)"/>
+      <line x1="480" y1="110" x2="530" y2="110" class="svg-edge-active" marker-end="url(#arrW0)"/>
+      <line x1="730" y1="110" x2="780" y2="110" class="svg-edge-active" marker-end="url(#arrW0)"/>
+
+      <text x="500" y="40" text-anchor="middle" class="svg-text" fill="#ffde00">client-host-server architecture — stateful sessions over JSON-RPC 2.0</text>
+      <text x="500" y="195" text-anchor="middle" class="svg-text-sm">one host can spawn many clients · each client ↔ exactly one server · servers stay isolated from each other</text>
+    </svg>
+  </div>
+
+  <h3>Stateful sessions, not one-shot calls</h3>
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <div class="prim-icon">🔄</div>
+      <h4>Three message types (JSON-RPC 2.0)</h4>
+      <ul>
+        <li><strong>Requests</strong> — bidirectional, expect a response (e.g. <code>tools/call</code>)</li>
+        <li><strong>Responses</strong> — success result <em>or</em> structured error, matched by ID</li>
+        <li><strong>Notifications</strong> — fire-and-forget, no response (e.g. <code>notifications/tools/list_changed</code>)</li>
+      </ul>
+    </div>
+    <div class="prim-card resource">
+      <div class="prim-icon">🤝</div>
+      <h4>Capability negotiation up front</h4>
+      <ul>
+        <li>On <code>initialize</code>, client + server <em>both</em> declare what they support</li>
+        <li>Server: tools? resources (with subscribe / listChanged)? prompts?</li>
+        <li>Client: sampling? roots?</li>
+        <li>Each capability unlocks specific methods — nothing is invoked unless both sides agreed</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Four design principles (worth memorising)</h3>
+  <div class="prim-grid">
+    <div class="prim-card resource">
+      <div class="prim-icon">1️⃣</div>
+      <h4>Servers should be trivial to build</h4>
+      <p>One async function + decorator = a working server. Hosts carry the orchestration weight. Simple interfaces win over clever ones.</p>
+    </div>
+    <div class="prim-card tool">
+      <div class="prim-icon">2️⃣</div>
+      <h4>Servers should be highly composable</h4>
+      <p>Each server owns one focused capability. Many small servers > one giant one. Shared protocol means they snap together with no custom glue.</p>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">3️⃣</div>
+      <h4>Servers can't see the whole conversation</h4>
+      <p>Hard isolation. A server gets only the slice it needs. Full conversation history stays in the host. Cross-server interactions are <em>mediated</em>, never direct.</p>
+    </div>
+    <div class="prim-card resource">
+      <div class="prim-icon">4️⃣</div>
+      <h4>Features can grow progressively</h4>
+      <p>Core protocol is intentionally small. Optional capabilities are negotiated, not assumed. Clients and servers evolve independently; backwards compatibility is a feature.</p>
+    </div>
+  </div>
+
+  <h3>Where MCP is heading — remote servers, registry, agents</h3>
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <div class="prim-icon">🌐</div>
+      <h4>Remote servers + OAuth 2.0</h4>
+      <p>Beyond local stdio: servers hosted on public URLs over HTTP+SSE, secured with OAuth 2.0 handshake. Users authorise once; the server holds the token. Drops the barrier to entry to <em>open a URL</em>.</p>
+    </div>
+    <div class="prim-card resource">
+      <div class="prim-icon">📒</div>
+      <h4>MCP Registry (in development)</h4>
+      <p>A central discoverable index of verified MCP servers — capabilities, versions, trust signals, official-vendor blessings. Solves the "how do I <em>find</em> the right server?" problem.</p>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">🧬</div>
+      <h4>Self-evolving agents</h4>
+      <p>Once a registry exists, an agent can encounter a task it can't do, search the registry, install the missing server, and proceed. Agents stop being limited to their pre-programmed tool set.</p>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Bottom line</div>
+    <div class="uc-title">MCP is a standardised, stateful, capability-negotiated, security-isolated way to feed any AI app any context from any source.</div>
+    <p>The protocol is small on purpose. The leverage comes from the ecosystem: any client + any server + any model + any tool, all snapping together because they speak one language. The next section makes the roles concrete with a plain-English walkthrough.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 03 — PLAIN-ENGLISH PRIMER (zero-knowledge friendly)
+============================================================ -->
+<div class="section-divider fade-in" id="primer">
+  <div class="section-number">03</div>
+  <h2>MCP in plain English</h2>
+  <p>Before any code or protocol detail — here is the whole idea in everyday language,
+  for a reader who has never seen MCP. Four roles, one shared language, a few concrete
+  examples. If you remember only this section, you'll still understand the rest.</p>
+</div>
+
+<section class="fade-in">
+  <h3>The 30-second restaurant analogy</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card good">
+      <h4><span class="icon">🍽</span>You sit at a table (the Host)</h4>
+      <ul>
+        <li>The <strong>Host</strong> is the AI app you actually use — Claude Desktop, Cursor, Windsurf, ChatGPT Desktop, an IDE plugin</li>
+        <li>It owns the conversation, the screen, the user's trust</li>
+        <li>It decides which kitchens (servers) it's allowed to talk to</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🧑‍🍳</span>A waiter walks to each kitchen (a Client)</h4>
+      <ul>
+        <li>The <strong>Client</strong> is a tiny connector the Host spawns — one per kitchen</li>
+        <li>It speaks the shared protocol (MCP / JSON-RPC) on your behalf</li>
+        <li>One client ↔ one server. Strict 1-to-1. Servers can't talk to each other</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🏫</span>The kitchen prepares the dish (a Server)</h4>
+      <ul>
+        <li>An <strong>MCP Server</strong> is a small program wrapping <em>one</em> capability — your filesystem, GitHub, Slack, Postgres, Jira, a search API</li>
+        <li>It exposes a menu of things it can do, in a standard format</li>
+        <li>You can write one in ~30 lines of Python or TypeScript</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">📜</span>The menu items are the Tools, Resources, Prompts</h4>
+      <ul>
+        <li><strong>Tools</strong> — actions the AI can <em>run</em> ("send_email", "query_db")</li>
+        <li><strong>Resources</strong> — data the AI can <em>read</em> (a file, a row, a wiki page)</li>
+        <li><strong>Prompts</strong> — templates the <em>user</em> picks (slash-commands)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The one-line definition</div>
+    <div class="uc-title">MCP is a standard way for an AI app to ask outside programs for context and to invoke actions — without bespoke integration code for every combination.</div>
+    <p>Anthropic released it in November 2024 (designed by Mahesh Murag). Think of it as <em>USB-C for AI</em>: one socket, many devices. Before MCP, every AI app needed custom glue code for every tool — the famous <em>N×M problem</em>. After MCP, build a server <strong>once</strong>, and any MCP-aware app can use it.</p>
+  </div>
+
+  <h3>One picture — the four roles together</h3>
+  <div class="pipeline-wrap">
+    <h4>Host · Clients · Servers · Capabilities</h4>
+    <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+      </defs>
+
+      <!-- HOST APP container -->
+      <rect x="30" y="30" width="380" height="380" rx="14" fill="rgba(255,222,0,0.05)" stroke="#ffde00" stroke-width="1.8"/>
+      <text x="50" y="58" class="svg-text" fill="#ffde00" font-size="15">HOST APP — e.g. Claude Desktop</text>
+      <text x="50" y="76" class="svg-text-sm">owns the LLM, the user, the consent UI</text>
+
+      <rect x="60" y="100" width="140" height="55" rx="8" fill="#181c26" stroke="#5a6175"/>
+      <text x="130" y="125" text-anchor="middle" class="svg-text">👤 user</text>
+      <text x="130" y="143" text-anchor="middle" class="svg-text-sm">types prompts</text>
+      <rect x="230" y="100" width="150" height="55" rx="8" fill="#181c26" stroke="#5a6175"/>
+      <text x="305" y="125" text-anchor="middle" class="svg-text">🧠 LLM</text>
+      <text x="305" y="143" text-anchor="middle" class="svg-text-sm">picks tools to call</text>
+
+      <text x="50" y="195" class="svg-text-sm" fill="#4fc3f7">three Clients — one per Server</text>
+      <rect x="60" y="210" width="100" height="55" rx="8" fill="#181c26" stroke="#4fc3f7" class="svg-pulse"/>
+      <text x="110" y="233" text-anchor="middle" class="svg-text-sm">client ①</text>
+      <text x="110" y="250" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">→ fs</text>
+      <rect x="175" y="210" width="100" height="55" rx="8" fill="#181c26" stroke="#4fc3f7" class="svg-pulse"/>
+      <text x="225" y="233" text-anchor="middle" class="svg-text-sm">client ②</text>
+      <text x="225" y="250" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">→ git</text>
+      <rect x="290" y="210" width="100" height="55" rx="8" fill="#181c26" stroke="#4fc3f7" class="svg-pulse"/>
+      <text x="340" y="233" text-anchor="middle" class="svg-text-sm">client ③</text>
+      <text x="340" y="250" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">→ slack</text>
+
+      <text x="50" y="300" class="svg-text-sm">policy: consent UI · permissions · audit log</text>
+      <text x="50" y="320" class="svg-text-sm">isolation: each client sees only its own server</text>
+      <text x="50" y="340" class="svg-text-sm">conversation history never leaves the host</text>
+      <text x="50" y="380" class="svg-text-sm" fill="#ffde00">JSON-RPC 2.0 — the shared language</text>
+
+      <line x1="410" y1="237" x2="500" y2="105" class="svg-edge-active" marker-end="url(#arrP)"/>
+      <line x1="410" y1="237" x2="500" y2="230" class="svg-edge-active" marker-end="url(#arrP)"/>
+      <line x1="410" y1="237" x2="500" y2="355" class="svg-edge-active" marker-end="url(#arrP)"/>
+
+      <rect x="500" y="75" width="470" height="90" rx="10" fill="rgba(68,163,64,0.06)" stroke="#44a340"/>
+      <text x="520" y="98" class="svg-text" fill="#44a340">MCP Server: filesystem</text>
+      <text x="520" y="116" class="svg-text-sm">tools: read_file · write_file · list_dir</text>
+      <text x="520" y="132" class="svg-text-sm">resources: file://…</text>
+      <text x="520" y="150" class="svg-text-sm" fill="#ffde00">runs locally over stdio</text>
+
+      <rect x="500" y="200" width="470" height="90" rx="10" fill="rgba(68,163,64,0.06)" stroke="#44a340"/>
+      <text x="520" y="223" class="svg-text" fill="#44a340">MCP Server: git / GitHub</text>
+      <text x="520" y="241" class="svg-text-sm">tools: list_issues · create_pr · search_code</text>
+      <text x="520" y="257" class="svg-text-sm">resources: repo://owner/name/file.md</text>
+      <text x="520" y="275" class="svg-text-sm" fill="#ffde00">runs as HTTP+SSE, OAuth-secured</text>
+
+      <rect x="500" y="325" width="470" height="90" rx="10" fill="rgba(68,163,64,0.06)" stroke="#44a340"/>
+      <text x="520" y="348" class="svg-text" fill="#44a340">MCP Server: Slack</text>
+      <text x="520" y="366" class="svg-text-sm">tools: post_message · search_channel · list_users</text>
+      <text x="520" y="382" class="svg-text-sm">prompts: /summarize-thread (user-triggered)</text>
+      <text x="520" y="400" class="svg-text-sm" fill="#ffde00">remote, behind OAuth 2.0</text>
+    </svg>
+  </div>
+
+  <h3>The four roles, defined precisely</h3>
+  <div class="prim-grid">
+    <div class="prim-card resource">
+      <span class="ctrl">app-controlled</span>
+      <div class="prim-icon">🏠</div>
+      <h4>1. Host — the AI application</h4>
+      <div class="prim-sub">Claude Desktop · Cursor · Cline · Windsurf · Goose</div>
+      <ul>
+        <li>The program the human <em>actually opens</em></li>
+        <li>Owns the LLM (or calls an external provider)</li>
+        <li>Spawns Clients, enforces consent + security policy</li>
+        <li>Keeps the full conversation — servers never see it</li>
+        <li>Aggregates context from many Clients into one prompt</li>
+      </ul>
+    </div>
+
+    <div class="prim-card tool">
+      <span class="ctrl">app-controlled</span>
+      <div class="prim-icon">🔌</div>
+      <h4>2. Client — the per-server connector</h4>
+      <div class="prim-sub">one Client = one stateful session = one Server</div>
+      <ul>
+        <li>Created and owned by the Host (1:1 with a Server)</li>
+        <li>Performs the <code>initialize</code> handshake + capability negotiation</li>
+        <li>Routes JSON-RPC messages both directions</li>
+        <li>Subscribes to notifications (resource changed, tool list changed)</li>
+        <li>Hard isolation — a client never sees another server's data</li>
+      </ul>
+    </div>
+
+    <div class="prim-card prompt">
+      <span class="ctrl">server-controlled</span>
+      <div class="prim-icon">🏭</div>
+      <h4>3. Server — the capability provider</h4>
+      <div class="prim-sub">one server wraps one system (filesystem, GitHub, Postgres, Jira…)</div>
+      <ul>
+        <li>Small, focused process — "do one thing well"</li>
+        <li>Declares which primitives it offers (tools / resources / prompts)</li>
+        <li>Runs locally over <code>stdio</code> <em>or</em> remotely over HTTP+SSE</li>
+        <li>Can't see the conversation, can't see other servers</li>
+        <li>Build once — every MCP-aware Host gets to use it</li>
+      </ul>
+    </div>
+
+    <div class="prim-card tool">
+      <span class="ctrl">model-controlled</span>
+      <div class="prim-icon">🔧</div>
+      <h4>4. Tools — the LLM's actions</h4>
+      <div class="prim-sub">named function + JSON schema + description</div>
+      <ul>
+        <li>What the language model can <em>do</em>, not just read</li>
+        <li>Server publishes them via <code>tools/list</code>; LLM picks via <code>tools/call</code></li>
+        <li>Each call returns structured content (text / image / JSON)</li>
+        <li>Host always shows the user a consent prompt before execution</li>
+        <li>Tools ride alongside <strong>Resources</strong> (read-only data) and <strong>Prompts</strong> (user-triggered templates)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Walking through one real interaction</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>You launch Claude Desktop — the Host boots up</h4>
+        <p>Claude Desktop reads its config file, sees you registered a filesystem MCP server and a GitHub MCP server. It spawns <strong>two Clients</strong>, one per server, and each runs an <code>initialize</code> handshake.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>The Clients ask each Server "what can you do?"</h4>
+        <p>Each Server answers with a list of capabilities + JSON schemas. Claude (the LLM) now knows that <code>read_file</code>, <code>list_dir</code>, <code>list_issues</code>, <code>create_pr</code> all exist — along with the exact shape of every argument.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>You ask: "Summarise the open issues in my repo and draft a release note"</h4>
+        <p>The LLM reasons: "I need <code>list_issues</code> from the GitHub server, then I'll write text". It emits a <code>tools/call</code> request through the GitHub Client.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h4>The Host pops a consent UI</h4>
+        <p>You see exactly which tool will run, with which arguments. You click <strong>Approve</strong>. The Client forwards the JSON-RPC call to the Server.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <h4>Server executes, returns structured result</h4>
+        <p>The GitHub server hits the GitHub API, packs the issues into a tool result, sends it back. The LLM receives the data, writes the release note, and you see the final answer — with the tool-use trace visible.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>What the standard solves — the N×M problem</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">🕸</span>Before MCP — N×M bespoke integrations</h4>
+      <ul>
+        <li>N AI apps × M tools = N×M custom adapters</li>
+        <li>Every team reinvents prompt logic + tool-calling glue</li>
+        <li>Switch the AI app? Rewrite every integration</li>
+        <li>Switch the tool's API version? Hunt down every caller</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔌</span>With MCP — N + M plug-ins</h4>
+      <ul>
+        <li>Each AI app implements the MCP client side <em>once</em></li>
+        <li>Each tool ships an MCP server <em>once</em></li>
+        <li>Any client ↔ any server, instantly, with no extra glue</li>
+        <li>Mental model borrowed from the Language Server Protocol (LSP) that fixed editor ↔ language integration</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Who benefits</div>
+    <div class="uc-title">App builders ship faster · tool vendors get free distribution · users get richer AI</div>
+    <p><strong>App developers</strong> drop in any MCP server with zero per-integration work. <strong>Tool vendors</strong> (Shopify, Grafana, Sentry…) build their server <em>once</em> and instantly reach every MCP-compatible client. <strong>Enterprises</strong> separate concerns cleanly — one team owns the vector-DB MCP server, every other team just consumes it. <strong>End users</strong> get AI apps that actually <em>know things</em> about their data and can <em>take real actions</em> — not just chat.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 04 — MCP vs RAG vs TOOL BINDING
+============================================================ -->
+<div class="section-divider fade-in" id="vs">
+  <div class="section-number">04</div>
+  <h2>MCP vs RAG vs Tool Binding</h2>
+  <p>People ask: <em>"Isn't this just RAG?"</em> No. RAG fetches text. Tool binding wires
+  one agent to one tool. MCP is the wiring standard that lets <em>any</em> agent talk to
+  <em>any</em> tool or data source without bespoke code.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>Evolution of LLM ↔ tool integration</h4>
+    <svg viewBox="0 0 1000 360" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrY3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+        <marker id="arrR3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef5350"/></marker>
+      </defs>
+
+      <!-- Stage 1: Standalone LLM -->
+      <text x="120" y="30" text-anchor="middle" class="svg-text" fill="#ef5350">① Standalone LLM</text>
+      <rect x="40" y="50" width="160" height="80" rx="10" fill="#181c26" stroke="#ef5350"/>
+      <text x="120" y="82" text-anchor="middle" class="svg-text">🤖 LLM</text>
+      <text x="120" y="102" text-anchor="middle" class="svg-text-sm">frozen weights only</text>
+      <text x="120" y="116" text-anchor="middle" class="svg-text-sm" fill="#ef5350">no external access</text>
+
+      <!-- Stage 2: Tool Binding -->
+      <text x="370" y="30" text-anchor="middle" class="svg-text" fill="#ffde00">② Tool Binding (LangChain)</text>
+      <rect x="280" y="50" width="180" height="40" rx="8" fill="#181c26" stroke="#ffde00"/>
+      <text x="370" y="76" text-anchor="middle" class="svg-text">🤖 LLM + bind_tools()</text>
+      <rect x="280" y="110" width="55" height="30" rx="5" fill="#181c26" stroke="#5a6175"/><text x="307" y="129" text-anchor="middle" class="svg-text-sm">search</text>
+      <rect x="343" y="110" width="55" height="30" rx="5" fill="#181c26" stroke="#5a6175"/><text x="370" y="129" text-anchor="middle" class="svg-text-sm">calc</text>
+      <rect x="406" y="110" width="55" height="30" rx="5" fill="#181c26" stroke="#5a6175"/><text x="433" y="129" text-anchor="middle" class="svg-text-sm">db</text>
+      <line x1="307" y1="90" x2="307" y2="110" stroke="#ffde00" stroke-width="1.2"/>
+      <line x1="370" y1="90" x2="370" y2="110" stroke="#ffde00" stroke-width="1.2"/>
+      <line x1="433" y1="90" x2="433" y2="110" stroke="#ffde00" stroke-width="1.2"/>
+      <text x="370" y="160" text-anchor="middle" class="svg-text-sm" fill="#ffde00">stateless, per-agent</text>
+
+      <!-- Stage 3: MCP -->
+      <text x="780" y="30" text-anchor="middle" class="svg-text" fill="#44a340">③ MCP — standard wire</text>
+      <rect x="640" y="50" width="280" height="40" rx="8" fill="#181c26" stroke="#44a340"/>
+      <text x="780" y="76" text-anchor="middle" class="svg-text">🤖 Host (Claude / Cursor / VS Code)</text>
+      <!-- MCP protocol layer -->
+      <rect x="640" y="100" width="280" height="22" rx="5" fill="rgba(68,163,64,0.15)" stroke="#44a340" stroke-dasharray="3 2"/>
+      <text x="780" y="116" text-anchor="middle" class="svg-text-sm" fill="#44a340">MCP — JSON-RPC 2.0</text>
+      <!-- Servers -->
+      <rect x="640" y="135" width="60" height="40" rx="5" fill="#181c26" stroke="#4fc3f7"/><text x="670" y="155" text-anchor="middle" class="svg-text-sm">files</text><text x="670" y="168" text-anchor="middle" class="svg-text-sm">server</text>
+      <rect x="710" y="135" width="60" height="40" rx="5" fill="#181c26" stroke="#4fc3f7"/><text x="740" y="155" text-anchor="middle" class="svg-text-sm">github</text><text x="740" y="168" text-anchor="middle" class="svg-text-sm">server</text>
+      <rect x="780" y="135" width="60" height="40" rx="5" fill="#181c26" stroke="#4fc3f7"/><text x="810" y="155" text-anchor="middle" class="svg-text-sm">slack</text><text x="810" y="168" text-anchor="middle" class="svg-text-sm">server</text>
+      <rect x="850" y="135" width="60" height="40" rx="5" fill="#181c26" stroke="#4fc3f7"/><text x="880" y="155" text-anchor="middle" class="svg-text-sm">postgres</text><text x="880" y="168" text-anchor="middle" class="svg-text-sm">server</text>
+      <line x1="670" y1="122" x2="670" y2="135" stroke="#44a340"/>
+      <line x1="740" y1="122" x2="740" y2="135" stroke="#44a340"/>
+      <line x1="810" y1="122" x2="810" y2="135" stroke="#44a340"/>
+      <line x1="880" y1="122" x2="880" y2="135" stroke="#44a340"/>
+      <text x="780" y="195" text-anchor="middle" class="svg-text-sm" fill="#44a340">stateful, app-wide, swappable</text>
+
+      <!-- Big arrow showing progression -->
+      <line x1="220" y1="240" x2="640" y2="240" stroke="#ffde00" stroke-width="2.5" marker-end="url(#arrY3)" stroke-dasharray="6 4"/>
+      <text x="430" y="232" text-anchor="middle" class="svg-text" fill="#ffde00">protocol standardisation →</text>
+
+      <!-- N×M vs N+M math -->
+      <rect x="40" y="270" width="420" height="70" rx="10" fill="rgba(239,83,80,0.06)" stroke="#ef5350" stroke-dasharray="2 3"/>
+      <text x="250" y="294" text-anchor="middle" class="svg-text" fill="#ef5350">Before: N × M integrations</text>
+      <text x="250" y="316" text-anchor="middle" class="svg-text-sm">10 clients × 50 tools = 500 bespoke connectors</text>
+      <text x="250" y="332" text-anchor="middle" class="svg-text-sm">every tool change ripples to every client</text>
+
+      <rect x="540" y="270" width="420" height="70" rx="10" fill="rgba(68,163,64,0.06)" stroke="#44a340" stroke-dasharray="2 3"/>
+      <text x="750" y="294" text-anchor="middle" class="svg-text" fill="#44a340">After: N + M implementations</text>
+      <text x="750" y="316" text-anchor="middle" class="svg-text-sm">10 clients + 50 tools = 60 implementations</text>
+      <text x="750" y="332" text-anchor="middle" class="svg-text-sm">any client × any server, plug-and-play</text>
+    </svg>
+  </div>
+
+  <h3>RAG vs MCP — overlap and difference</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">📚</span>Traditional RAG (without MCP)</h4>
+      <ul>
+        <li>App manually owns the vector store, embedder, retriever</li>
+        <li>Adding a new document source = rewriting app code</li>
+        <li>Each integration is bespoke and tightly coupled</li>
+        <li>Read-only retrieval — fetches text, can't take actions</li>
+        <li>One-shot per query, no bidirectional protocol</li>
+        <li>Hard to swap implementations without breaking the app</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔌</span>MCP (with optional RAG inside a server)</h4>
+      <ul>
+        <li>App asks: <em>"give me context about X"</em> — server decides how</li>
+        <li>Swap a document source by swapping the server, app untouched</li>
+        <li>Standard <strong>Resources</strong> primitive — same shape for any data</li>
+        <li><strong>Tools</strong> primitive enables actions (write file, send Slack, run query)</li>
+        <li>Bidirectional + stateful — supports memory, subscriptions, sampling</li>
+        <li>A RAG pipeline is one valid implementation <em>behind</em> an MCP server</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead><tr><th>Dimension</th><th>RAG</th><th>Tool Binding</th><th>MCP</th></tr></thead>
+      <tbody>
+        <tr><td>Primary purpose</td><td>Inject text context</td><td>Let LLM call functions</td><td>Standardise both context + actions</td></tr>
+        <tr><td>Scope</td><td>Per app</td><td>Per agent / session</td><td>Whole AI ecosystem</td></tr>
+        <tr><td>Direction</td><td>One-shot retrieval</td><td>One-shot call</td><td><span class="badge green">Bidirectional + stateful</span></td></tr>
+        <tr><td>Discoverability</td><td>None</td><td>Hard-coded list</td><td><span class="badge green">Capability negotiation</span></td></tr>
+        <tr><td>Swap data source</td><td>Edit app code</td><td>Edit binding</td><td><span class="badge green">Swap server, app untouched</span></td></tr>
+        <tr><td>Memory across sessions</td><td><span class="badge red">No</span></td><td><span class="badge red">No</span></td><td><span class="badge green">Yes (stateful sessions)</span></td></tr>
+        <tr><td>Multi-app reuse</td><td><span class="badge red">No</span></td><td><span class="badge red">No</span></td><td><span class="badge green">Yes — one server, many clients</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 05 — ARCHITECTURE
+============================================================ -->
+<div class="section-divider fade-in" id="arch">
+  <div class="section-number">05</div>
+  <h2>Architecture — Host · Client · Server</h2>
+  <p>MCP uses a three-role topology with strong isolation. One <strong>host</strong> process
+  manages many <strong>clients</strong>, each holding a 1-to-1 session with a single
+  <strong>server</strong>. The host is the trust boundary.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>Host · Client · Server — one host, many isolated sessions</h4>
+    <svg viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+        <linearGradient id="hostGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#44a340"/><stop offset="100%" stop-color="#378b29"/></linearGradient>
+      </defs>
+
+      <!-- HOST -->
+      <rect x="40" y="40" width="920" height="160" rx="14" fill="rgba(68,163,64,0.05)" stroke="#44a340" stroke-width="1.8" stroke-dasharray="4 3"/>
+      <text x="60" y="68" class="svg-text" fill="#44a340" font-size="14">HOST PROCESS</text>
+      <text x="60" y="84" class="svg-text-sm">Claude Desktop · Cursor · VS Code · Cline · custom agent</text>
+
+      <!-- LLM inside host -->
+      <rect x="60" y="100" width="200" height="80" rx="10" fill="url(#hostGrad)" stroke="#fff" stroke-width="1.5" class="svg-pulse"/>
+      <text x="160" y="132" text-anchor="middle" class="svg-text" font-size="14">🧠 LLM</text>
+      <text x="160" y="152" text-anchor="middle" class="svg-text-sm" fill="#fff">reasoning + sampling</text>
+      <text x="160" y="168" text-anchor="middle" class="svg-text-sm" fill="#fff">context aggregation</text>
+
+      <!-- Three Clients -->
+      <rect x="320" y="110" width="180" height="70" rx="10" fill="#181c26" stroke="#ffde00"/>
+      <text x="410" y="138" text-anchor="middle" class="svg-text">🔗 Client A</text>
+      <text x="410" y="158" text-anchor="middle" class="svg-text-sm">1 session, 1 server</text>
+      <text x="410" y="172" text-anchor="middle" class="svg-text-sm" fill="#ffde00">isolated state</text>
+
+      <rect x="520" y="110" width="180" height="70" rx="10" fill="#181c26" stroke="#ffde00"/>
+      <text x="610" y="138" text-anchor="middle" class="svg-text">🔗 Client B</text>
+      <text x="610" y="158" text-anchor="middle" class="svg-text-sm">1 session, 1 server</text>
+      <text x="610" y="172" text-anchor="middle" class="svg-text-sm" fill="#ffde00">isolated state</text>
+
+      <rect x="720" y="110" width="180" height="70" rx="10" fill="#181c26" stroke="#ffde00"/>
+      <text x="810" y="138" text-anchor="middle" class="svg-text">🔗 Client C</text>
+      <text x="810" y="158" text-anchor="middle" class="svg-text-sm">1 session, 1 server</text>
+      <text x="810" y="172" text-anchor="middle" class="svg-text-sm" fill="#ffde00">isolated state</text>
+
+      <!-- LLM ↔ Clients (orchestration) -->
+      <line x1="260" y1="145" x2="320" y2="145" class="svg-edge-active" marker-end="url(#arrA)"/>
+      <line x1="260" y1="145" x2="520" y2="145" class="svg-edge-active" marker-end="url(#arrA)" opacity="0.7"/>
+      <line x1="260" y1="145" x2="720" y2="145" class="svg-edge-active" marker-end="url(#arrA)" opacity="0.5"/>
+
+      <!-- JSON-RPC bridge labels -->
+      <text x="500" y="225" text-anchor="middle" class="svg-text" fill="#ffde00">JSON-RPC 2.0 — stdio (local) · HTTP+SSE (remote)</text>
+      <line x1="410" y1="180" x2="410" y2="270" stroke="#ffde00" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrA)"/>
+      <line x1="610" y1="180" x2="610" y2="270" stroke="#ffde00" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrA)"/>
+      <line x1="810" y1="180" x2="810" y2="270" stroke="#ffde00" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrA)"/>
+
+      <!-- Three Servers -->
+      <rect x="320" y="270" width="180" height="120" rx="10" fill="#181c26" stroke="#4fc3f7" stroke-width="1.5"/>
+      <text x="410" y="298" text-anchor="middle" class="svg-text">📁 Filesystem Server</text>
+      <text x="410" y="318" text-anchor="middle" class="svg-text-sm">Tools: read, write, search</text>
+      <text x="410" y="334" text-anchor="middle" class="svg-text-sm">Resources: file://*</text>
+      <text x="410" y="354" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">local subprocess</text>
+      <text x="410" y="370" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">stdio transport</text>
+
+      <rect x="520" y="270" width="180" height="120" rx="10" fill="#181c26" stroke="#4fc3f7" stroke-width="1.5"/>
+      <text x="610" y="298" text-anchor="middle" class="svg-text">🐙 GitHub Server</text>
+      <text x="610" y="318" text-anchor="middle" class="svg-text-sm">Tools: create-issue, PR</text>
+      <text x="610" y="334" text-anchor="middle" class="svg-text-sm">Resources: repo files</text>
+      <text x="610" y="354" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">remote service</text>
+      <text x="610" y="370" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">HTTP+SSE, OAuth 2.0</text>
+
+      <rect x="720" y="270" width="180" height="120" rx="10" fill="#181c26" stroke="#4fc3f7" stroke-width="1.5"/>
+      <text x="810" y="298" text-anchor="middle" class="svg-text">🐘 Postgres Server</text>
+      <text x="810" y="318" text-anchor="middle" class="svg-text-sm">Tools: query, schema</text>
+      <text x="810" y="334" text-anchor="middle" class="svg-text-sm">Resources: tables, views</text>
+      <text x="810" y="354" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">local subprocess</text>
+      <text x="810" y="370" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">stdio transport</text>
+
+      <!-- 1:1 labels -->
+      <text x="420" y="248" class="svg-text-sm" fill="#ffde00">1 : 1</text>
+      <text x="620" y="248" class="svg-text-sm" fill="#ffde00">1 : 1</text>
+      <text x="820" y="248" class="svg-text-sm" fill="#ffde00">1 : 1</text>
+
+      <!-- Trust boundary annotation -->
+      <text x="60" y="425" class="svg-text-sm" fill="#44a340">↑ Trust boundary — host enforces user consent, isolates servers from each other and from full chat history</text>
+    </svg>
+  </div>
+
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <div class="prim-icon">🏠</div>
+      <h4>Host</h4>
+      <div class="prim-sub">the trust boundary</div>
+      <ul>
+        <li>Creates and supervises all clients</li>
+        <li>Holds the LLM + the full conversation history</li>
+        <li>Enforces user consent before any tool call</li>
+        <li>Aggregates context from multiple servers</li>
+        <li>Coordinates sampling requests back to the LLM</li>
+      </ul>
+    </div>
+    <div class="prim-card resource">
+      <div class="prim-icon">🔗</div>
+      <h4>Client</h4>
+      <div class="prim-sub">one per server, isolated</div>
+      <ul>
+        <li>1-to-1 stateful session with exactly one server</li>
+        <li>Handles protocol negotiation + capability exchange</li>
+        <li>Routes JSON-RPC messages bidirectionally</li>
+        <li>Manages subscriptions and notifications</li>
+        <li>Never sees other servers or full chat history</li>
+      </ul>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">🛠</div>
+      <h4>Server</h4>
+      <div class="prim-sub">focused capability provider</div>
+      <ul>
+        <li>Exposes Tools, Resources, Prompts via MCP primitives</li>
+        <li>Local subprocess (stdio) or remote service (HTTP+SSE)</li>
+        <li>One focused responsibility (files, GitHub, Slack, DB…)</li>
+        <li>Can be built by anyone — official, community, or in-house</li>
+        <li>Reusable across every MCP-compatible client</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Why this topology</div>
+    <div class="uc-title">Servers can't read the conversation, nor see each other</div>
+    <p>The host hands each server only what it needs. A GitHub server never sees your Slack messages; a Postgres server never sees your filesystem reads. This isolation is a core MCP design principle — and the reason MCP is safe to install from untrusted sources, while raw "give the LLM API keys to everything" agent designs are not.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 06 — THREE PRIMITIVES
+============================================================ -->
+<div class="section-divider fade-in" id="primitives">
+  <div class="section-number">06</div>
+  <h2>The three server primitives</h2>
+  <p>Every MCP server exposes some combination of <strong>Tools</strong>,
+  <strong>Resources</strong>, and <strong>Prompts</strong>. Each has a different
+  <em>controller</em> — that's the key distinction.</p>
+</div>
+
+<section class="fade-in">
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <span class="ctrl">model-controlled</span>
+      <div class="prim-icon">🔧</div>
+      <h4>Tools</h4>
+      <div class="prim-sub">executable functions the LLM can call</div>
+      <p>Side-effectful operations: query a DB, send a message, create a file, hit an API. Each tool has a name, a JSON-schema input, and a description. The LLM decides <em>when</em> to call them based on context.</p>
+      <ul>
+        <li>Discovered via <code>tools/list</code></li>
+        <li>Invoked via <code>tools/call</code></li>
+        <li>Capability flag: <code>tools.listChanged</code></li>
+        <li>Examples: <code>create_issue</code>, <code>send_email</code>, <code>run_query</code></li>
+      </ul>
+    </div>
+
+    <div class="prim-card resource">
+      <span class="ctrl">application-controlled</span>
+      <div class="prim-icon">📂</div>
+      <h4>Resources</h4>
+      <div class="prim-sub">read-only data with stable URIs</div>
+      <p>Files, DB schemas, log streams — anything addressable. The <em>host application</em> decides how to surface them (auto-include, user-pick, search). Each has a unique URI like <code>file:///x</code> or <code>postgres://t/users</code>.</p>
+      <ul>
+        <li>Listed via <code>resources/list</code></li>
+        <li>Read via <code>resources/read</code></li>
+        <li>Optional <code>subscribe</code> for change notifications</li>
+        <li>Examples: project files, schemas, dashboards, log tails</li>
+      </ul>
+    </div>
+
+    <div class="prim-card prompt">
+      <span class="ctrl">user-controlled</span>
+      <div class="prim-icon">💬</div>
+      <h4>Prompts</h4>
+      <div class="prim-sub">parametrised prompt templates</div>
+      <p>Pre-built instructions the user can pick — typically surfaced as slash commands. The user (not the LLM) decides when to invoke. The server fills in the arguments and returns a structured message sequence.</p>
+      <ul>
+        <li>Listed via <code>prompts/list</code></li>
+        <li>Retrieved via <code>prompts/get</code></li>
+        <li>Often surfaced as <code>/slash-commands</code> in the UI</li>
+        <li>Examples: <code>/explain-code</code>, <code>/summarise-pr</code>, <code>/triage-bug</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The Controller Matters</div>
+    <div class="uc-title">Who decides when to invoke — model, app, or user?</div>
+    <p>This single axis determines security, UX, and observability. <strong>Tools</strong> are model-controlled (so the host must enforce user consent). <strong>Resources</strong> are app-controlled (so the host UI shows them as a tree/list/auto-include). <strong>Prompts</strong> are user-controlled (so the user explicitly fires them). Mixing these up is the #1 design mistake when building a server.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 07 — CLIENT FEATURES
+============================================================ -->
+<div class="section-divider fade-in" id="client">
+  <div class="section-number">07</div>
+  <h2>Client features — Roots &amp; Sampling</h2>
+  <p>Servers aren't the only ones with capabilities. Clients can expose <strong>Roots</strong>
+  (filesystem boundaries) and <strong>Sampling</strong> (LLM access on behalf of the
+  server) — the keys to advanced, agentic behaviour.</p>
+</div>
+
+<section class="fade-in">
+  <div class="prim-grid">
+    <div class="prim-card resource">
+      <div class="prim-icon">📁</div>
+      <h4>Roots</h4>
+      <div class="prim-sub">file:// URIs the server may operate within</div>
+      <p>Clients tell servers <em>"you can touch these directories, nothing else."</em> A code-editor host might expose the open project folder; a desktop client might expose <code>~/Documents</code>. Servers receive notifications when the root list changes.</p>
+      <ul>
+        <li>Listed via <code>roots/list</code></li>
+        <li>Each root: <code>{ uri: "file:///path", name?: "Project" }</code></li>
+        <li>Notification: <code>roots/list_changed</code></li>
+        <li>Hard boundary — server cannot escape it</li>
+      </ul>
+    </div>
+
+    <div class="prim-card tool">
+      <div class="prim-icon">🧬</div>
+      <h4>Sampling</h4>
+      <div class="prim-sub">server asks client to run the LLM</div>
+      <p>A server can request <em>"please run this completion through your LLM and give me the result."</em> The client controls model choice, approves the prompt, and decides what the server gets to see. <strong>This is what enables nested, agentic behaviour without giving servers API keys.</strong></p>
+      <ul>
+        <li>Request: <code>sampling/createMessage</code></li>
+        <li>Client approves the prompt and the model</li>
+        <li>Server has zero credentials — host pays for tokens</li>
+        <li>Enables agents to call other agents recursively</li>
+      </ul>
+    </div>
+
+    <div class="prim-card prompt">
+      <div class="prim-icon">🧩</div>
+      <h4>Composability</h4>
+      <div class="prim-sub">any node can be both client and server</div>
+      <p>Client/server is a <em>logical</em> role, not a physical one. An orchestrator agent acts as a host to a research sub-agent (server) — and that sub-agent in turn acts as a host to a web-search server. This is how multi-agent systems compose without bespoke wiring.</p>
+      <ul>
+        <li>Layered agent architectures</li>
+        <li>Each layer = its own trust boundary</li>
+        <li>Reuse third-party agents as MCP servers</li>
+        <li>Specialise: orchestrator → researcher → fact-checker</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 08 — LIFECYCLE & MESSAGES
+============================================================ -->
+<div class="section-divider fade-in" id="lifecycle">
+  <div class="section-number">08</div>
+  <h2>Lifecycle &amp; JSON-RPC messages</h2>
+  <p>Every MCP session goes through three phases — <strong>Initialize</strong>,
+  <strong>Operate</strong>, <strong>Shutdown</strong> — and exchanges three message
+  shapes: <strong>Request</strong>, <strong>Response</strong>, <strong>Notification</strong>.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>Session lifecycle — handshake, normal operation, clean shutdown</h4>
+    <svg viewBox="0 0 1000 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+        <marker id="arrL2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+      </defs>
+
+      <!-- Two lifelines -->
+      <text x="200" y="30" text-anchor="middle" class="svg-text" fill="#ffde00">CLIENT</text>
+      <text x="800" y="30" text-anchor="middle" class="svg-text" fill="#4fc3f7">SERVER</text>
+      <line x1="200" y1="40" x2="200" y2="360" stroke="#ffde00" stroke-width="1.5" stroke-dasharray="2 4"/>
+      <line x1="800" y1="40" x2="800" y2="360" stroke="#4fc3f7" stroke-width="1.5" stroke-dasharray="2 4"/>
+
+      <!-- Phase 1: INITIALIZE -->
+      <rect x="40" y="55" width="120" height="22" rx="4" fill="rgba(68,163,64,0.15)" stroke="#44a340"/>
+      <text x="100" y="71" text-anchor="middle" class="svg-text-sm" fill="#44a340">① INITIALIZE</text>
+
+      <line x1="200" y1="90" x2="800" y2="90" stroke="#ffde00" stroke-width="1.8" marker-end="url(#arrL)"/>
+      <text x="500" y="84" text-anchor="middle" class="svg-text-sm" fill="#ffde00">initialize(version, capabilities, clientInfo)</text>
+
+      <line x1="800" y1="115" x2="200" y2="115" stroke="#4fc3f7" stroke-width="1.8" marker-end="url(#arrL2)"/>
+      <text x="500" y="109" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">result(version, capabilities, serverInfo)</text>
+
+      <line x1="200" y1="140" x2="800" y2="140" stroke="#ffde00" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrL)"/>
+      <text x="500" y="134" text-anchor="middle" class="svg-text-sm" fill="#ffde00">notifications/initialized   ← no response expected</text>
+
+      <!-- Phase 2: OPERATE -->
+      <rect x="40" y="170" width="120" height="22" rx="4" fill="rgba(255,222,0,0.15)" stroke="#ffde00"/>
+      <text x="100" y="186" text-anchor="middle" class="svg-text-sm" fill="#ffde00">② OPERATE</text>
+
+      <line x1="200" y1="205" x2="800" y2="205" stroke="#ffde00" stroke-width="1.8" marker-end="url(#arrL)"/>
+      <text x="500" y="199" text-anchor="middle" class="svg-text-sm" fill="#ffde00">tools/list</text>
+
+      <line x1="800" y1="230" x2="200" y2="230" stroke="#4fc3f7" stroke-width="1.8" marker-end="url(#arrL2)"/>
+      <text x="500" y="224" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">[ get_docs, search_web, ... ]</text>
+
+      <line x1="200" y1="255" x2="800" y2="255" stroke="#ffde00" stroke-width="1.8" marker-end="url(#arrL)"/>
+      <text x="500" y="249" text-anchor="middle" class="svg-text-sm" fill="#ffde00">tools/call(name=get_docs, args={query, library})</text>
+
+      <line x1="800" y1="280" x2="200" y2="280" stroke="#4fc3f7" stroke-width="1.8" marker-end="url(#arrL2)"/>
+      <text x="500" y="274" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">CallToolResult { content, isError }</text>
+
+      <!-- Phase 3: SHUTDOWN -->
+      <rect x="40" y="305" width="120" height="22" rx="4" fill="rgba(239,83,80,0.12)" stroke="#ef5350"/>
+      <text x="100" y="321" text-anchor="middle" class="svg-text-sm" fill="#ef5350">③ SHUTDOWN</text>
+
+      <line x1="200" y1="345" x2="800" y2="345" stroke="#ef5350" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrL)"/>
+      <text x="500" y="339" text-anchor="middle" class="svg-text-sm" fill="#ef5350">close stdin (stdio) · close HTTP conn (remote)</text>
+    </svg>
+  </div>
+
+  <h3>The three JSON-RPC 2.0 message shapes</h3>
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <div class="prim-icon">↩️</div>
+      <h4>Request</h4>
+      <div class="prim-sub">bidirectional · expects a response</div>
+      <div class="code-block json"><span class="cm">// client → server</span>
+{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">42</span>,
+  <span class="str">"method"</span>: <span class="str">"tools/call"</span>,
+  <span class="str">"params"</span>: {
+    <span class="str">"name"</span>: <span class="str">"get_docs"</span>,
+    <span class="str">"arguments"</span>: {
+      <span class="str">"query"</span>: <span class="str">"Chroma DB"</span>,
+      <span class="str">"library"</span>: <span class="str">"langchain"</span>
+    }
+  }
+}</div>
+    </div>
+
+    <div class="prim-card resource">
+      <div class="prim-icon">✅</div>
+      <h4>Response</h4>
+      <div class="prim-sub">result or error · matches request id</div>
+      <div class="code-block json"><span class="cm">// server → client</span>
+{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">42</span>,
+  <span class="str">"result"</span>: {
+    <span class="str">"content"</span>: [
+      { <span class="str">"type"</span>: <span class="str">"text"</span>,
+        <span class="str">"text"</span>: <span class="str">"Chroma is a vector DB..."</span> }
+    ],
+    <span class="str">"isError"</span>: <span class="kw">false</span>
+  }
+}</div>
+    </div>
+
+    <div class="prim-card prompt">
+      <div class="prim-icon">📢</div>
+      <h4>Notification</h4>
+      <div class="prim-sub">one-way · no id · no response</div>
+      <div class="code-block json"><span class="cm">// either direction</span>
+{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"method"</span>: <span class="str">"notifications/tools/list_changed"</span>
+}
+
+<span class="cm">// client tells server it is ready</span>
+{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"method"</span>: <span class="str">"notifications/initialized"</span>
+}</div>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Capability Negotiation</div>
+    <div class="uc-title">Each side declares what it supports — once, upfront</div>
+    <p>During <code>initialize</code>, the client declares features like <code>sampling</code> and <code>roots</code>; the server declares <code>tools</code>, <code>resources</code>, <code>prompts</code> and sub-flags like <code>resources.subscribe</code>. The session may only use what both sides agreed on. This is why MCP evolves cleanly: a newer client can ignore unknown capabilities; an older server simply never advertises features it doesn't have.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 09 — CLAUDE DESKTOP DEMO
+============================================================ -->
+<div class="section-divider fade-in" id="claude">
+  <div class="section-number">09</div>
+  <h2>Real example — Claude Desktop + Filesystem MCP</h2>
+  <p>The fastest way to feel MCP: drop the pre-built filesystem server into Claude Desktop
+  and watch it read, write, and search your real files. Zero code.</p>
+</div>
+
+<section class="fade-in">
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Install Claude Desktop &amp; Node.js</h4>
+        <p>Grab Claude Desktop (macOS or Windows) and confirm Node is on PATH — the official filesystem server runs via <code>npx</code>.</p>
+        <div class="step-detail"><span class="lbl">$</span> node --version
+<span class="out">v20.11.0</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>Enable Developer Mode</h4>
+        <p>Top-left <strong>Claude</strong> menu → <strong>Help</strong> → <strong>Enable Developer Mode</strong>. A new <em>Developer</em> tab appears in Settings.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>Edit <code>claude_desktop_config.json</code></h4>
+        <p>Settings → Developer → <strong>Edit Config</strong>. Paste the JSON below, replace <code>username</code> with yours, and pick folders Claude is allowed to touch.</p>
+        <div class="code-block json">{
+  <span class="str">"mcpServers"</span>: {
+    <span class="str">"filesystem"</span>: {
+      <span class="str">"command"</span>: <span class="str">"npx"</span>,
+      <span class="str">"args"</span>: [
+        <span class="str">"-y"</span>,
+        <span class="str">"@modelcontextprotocol/server-filesystem"</span>,
+        <span class="str">"C:\\Users\\username\\Desktop"</span>,
+        <span class="str">"C:\\Users\\username\\Downloads"</span>
+      ]
+    }
+  }
+}</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h4>Restart Claude Desktop</h4>
+        <p>Claude relaunches the server as a child process and talks to it via <strong>stdio</strong>. You'll see a small 🔨 (hammer) icon next to the input box — that means the server registered its tools.</p>
+        <div class="step-detail"><span class="lbl">tools/list →</span>
+<span class="out">[ read_file, write_file, move_file, search_files, list_directory, ... ]</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <h4>Try it</h4>
+        <p>Ask Claude in plain English. It picks the right tool, asks for your approval, then executes.</p>
+        <div class="step-detail"><span class="lbl">you:</span> Write a haiku about coffee and save it to my Desktop as coffee.txt
+<span class="lbl">claude:</span> <span class="out">[tool: write_file] → approve? ✓</span>
+<span class="lbl">claude:</span> <span class="out">Done. Saved coffee.txt to ~/Desktop.</span>
+
+<span class="lbl">you:</span> Move every .png on my Desktop to a new folder "Images"
+<span class="lbl">claude:</span> <span class="out">[tool: list_directory + move_file ×N] → approve? ✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">What just happened</div>
+    <div class="uc-title">No glue code. Standard protocol. Real actions.</div>
+    <p>You added a fully-functional file-management capability to a desktop LLM by editing one JSON file. The same server works in Cursor, Cline, and any other MCP-compatible client without modification. This is the "build once, adopt everywhere" promise made concrete.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 10 — COMPOSABILITY & FUTURE
+============================================================ -->
+<div class="section-divider fade-in" id="future">
+  <div class="section-number">10</div>
+  <h2>Composability &amp; self-evolving agents</h2>
+  <p>The two features that turn MCP from "tool plumbing" into something genuinely new:
+  <strong>composable agents</strong> and the upcoming <strong>MCP registry</strong>.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>An orchestrator agent that is itself a server — and discovers new servers at runtime</h4>
+    <svg viewBox="0 0 1000 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+      </defs>
+
+      <!-- User -->
+      <rect x="40" y="60" width="120" height="60" rx="10" fill="#181c26" stroke="#fff"/>
+      <text x="100" y="90" text-anchor="middle" class="svg-text">👤 User</text>
+      <text x="100" y="108" text-anchor="middle" class="svg-text-sm">"fix the bug in</text>
+
+      <!-- Orchestrator -->
+      <rect x="220" y="50" width="170" height="80" rx="10" fill="rgba(255,222,0,0.08)" stroke="#ffde00" stroke-width="1.8" class="svg-pulse"/>
+      <text x="305" y="80" text-anchor="middle" class="svg-text">🎯 Orchestrator</text>
+      <text x="305" y="100" text-anchor="middle" class="svg-text-sm">host AND server</text>
+      <text x="305" y="116" text-anchor="middle" class="svg-text-sm" fill="#ffde00">dual role</text>
+
+      <!-- Sub-agents -->
+      <rect x="460" y="20" width="160" height="60" rx="10" fill="#181c26" stroke="#44a340"/>
+      <text x="540" y="48" text-anchor="middle" class="svg-text">🔬 Research Agent</text>
+      <text x="540" y="66" text-anchor="middle" class="svg-text-sm">server (also a client)</text>
+
+      <rect x="460" y="100" width="160" height="60" rx="10" fill="#181c26" stroke="#44a340"/>
+      <text x="540" y="128" text-anchor="middle" class="svg-text">💻 Coding Agent</text>
+      <text x="540" y="146" text-anchor="middle" class="svg-text-sm">server (also a client)</text>
+
+      <rect x="460" y="180" width="160" height="60" rx="10" fill="#181c26" stroke="#44a340"/>
+      <text x="540" y="208" text-anchor="middle" class="svg-text">✅ Fact-checker</text>
+      <text x="540" y="226" text-anchor="middle" class="svg-text-sm">server (also a client)</text>
+
+      <line x1="160" y1="90" x2="220" y2="90" class="svg-edge-active" marker-end="url(#arrC)"/>
+      <line x1="390" y1="80" x2="460" y2="50" class="svg-edge-active" marker-end="url(#arrC)"/>
+      <line x1="390" y1="90" x2="460" y2="125" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.8"/>
+      <line x1="390" y1="105" x2="460" y2="200" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.7"/>
+
+      <!-- Leaf servers -->
+      <rect x="680" y="20" width="120" height="40" rx="8" fill="#181c26" stroke="#4fc3f7"/><text x="740" y="44" text-anchor="middle" class="svg-text-sm">web-search</text>
+      <rect x="680" y="70" width="120" height="40" rx="8" fill="#181c26" stroke="#4fc3f7"/><text x="740" y="94" text-anchor="middle" class="svg-text-sm">filesystem</text>
+      <rect x="680" y="120" width="120" height="40" rx="8" fill="#181c26" stroke="#4fc3f7"/><text x="740" y="144" text-anchor="middle" class="svg-text-sm">github</text>
+      <rect x="680" y="170" width="120" height="40" rx="8" fill="#181c26" stroke="#4fc3f7"/><text x="740" y="194" text-anchor="middle" class="svg-text-sm">grafana</text>
+      <rect x="680" y="220" width="120" height="40" rx="8" fill="#181c26" stroke="#4fc3f7"/><text x="740" y="244" text-anchor="middle" class="svg-text-sm">snowflake</text>
+
+      <line x1="620" y1="50" x2="680" y2="40" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.7"/>
+      <line x1="620" y1="130" x2="680" y2="90" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.7"/>
+      <line x1="620" y1="130" x2="680" y2="140" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.7"/>
+      <line x1="620" y1="210" x2="680" y2="190" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.7"/>
+      <line x1="620" y1="210" x2="680" y2="240" class="svg-edge-active" marker-end="url(#arrC)" opacity="0.7"/>
+
+      <!-- Registry -->
+      <rect x="380" y="280" width="240" height="70" rx="10" fill="rgba(171,71,188,0.1)" stroke="#ab47bc" stroke-width="1.8" stroke-dasharray="4 3"/>
+      <text x="500" y="306" text-anchor="middle" class="svg-text" fill="#ab47bc">🗂 MCP Registry (coming)</text>
+      <text x="500" y="324" text-anchor="middle" class="svg-text-sm">discover · verify · version</text>
+      <text x="500" y="340" text-anchor="middle" class="svg-text-sm">"find me an official Grafana server"</text>
+
+      <line x1="500" y1="240" x2="500" y2="280" stroke="#ab47bc" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrC)"/>
+      <text x="510" y="265" class="svg-text-sm" fill="#ab47bc">runtime lookup</text>
+    </svg>
+  </div>
+
+  <div class="cmp-grid">
+    <div class="cmp-card good">
+      <h4><span class="icon">🧩</span>Composability</h4>
+      <ul>
+        <li>Client/server is a logical role — any node can be both</li>
+        <li>An orchestrator agent looks like a server to its caller and a host to its sub-agents</li>
+        <li>Sampling lets sub-agents borrow the parent's LLM — zero API keys needed downstream</li>
+        <li>Specialised agents (research, coding, fact-checking) compose like Unix pipes</li>
+        <li>Third-party agents drop in unchanged — they speak MCP by default</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🌱</span>Self-evolving agents</h4>
+      <ul>
+        <li>Registry exposes <em>all</em> known servers + their capability schemas</li>
+        <li>Agent encounters an unknown system → searches registry → installs / connects</li>
+        <li>Example: coding agent hits a Grafana bug, discovers official Grafana server, queries logs</li>
+        <li>Enterprises run private registries with whitelists for governance</li>
+        <li>Versioning + OAuth 2.0 + verification badges close the trust loop</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 11 — WEBMCP (W3C standard, browser-native)
+============================================================ -->
+<div class="section-divider fade-in" id="webmcp">
+  <div class="section-number">11</div>
+  <h2>WebMCP — MCP for the browser</h2>
+  <p>The W3C just standardised an MCP-shaped API <em>inside the browser itself</em>.
+  No server process, no JSON-RPC wire, no Python — websites declare callable tools
+  directly to AI agents through <code>navigator.modelContext</code>. Released as a
+  W3C Draft Community Group Report on 2026-02-10; live behind a flag in Chrome 146 Canary.</p>
+</div>
+
+<section class="fade-in">
+  <h3>The problem WebMCP solves — agents reverse-engineering UIs</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">📸</span>Screenshot approach (Claude for Chrome, etc.)</h4>
+      <ul>
+        <li>Agent captures the page as an image, ships it to a vision model</li>
+        <li>Vision model guesses where the buttons / fields are by pixels</li>
+        <li>Every CSS animation, modal, or layout shift breaks the agent</li>
+        <li>Huge token cost per turn + multi-second latency</li>
+        <li>A 3-step task balloons into dozens of capture→infer→click loops</li>
+      </ul>
+    </div>
+    <div class="cmp-card bad">
+      <h4><span class="icon">🕸</span>DOM parsing approach</h4>
+      <ul>
+        <li>Agent slurps raw HTML, hunts for forms / buttons / links</li>
+        <li>SPAs emit thousands of nested nodes that exist purely for layout</li>
+        <li>Class names like <code>.css-1a2b3c</code> tell the model nothing</li>
+        <li>DOM was designed to describe <em>presentation</em>, not <em>capabilities</em></li>
+        <li>Pattern-matching burns tokens on plumbing markup</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The conceptual inversion</div>
+    <div class="uc-title">Stop making the agent guess. Have the website declare its tools.</div>
+    <p>Both legacy approaches force the AI to reverse-engineer capabilities from an interface designed for human eyes. WebMCP flips it: the page <em>tells</em> the agent <em>"here are the things I can do, here are the parameters I need, here is how to invoke them."</em> Same inversion of control MCP did for servers — now in the browser.</p>
+  </div>
+
+  <div class="pipeline-wrap">
+    <h4>Dual-layer web — human pixels above, machine schemas below</h4>
+    <svg viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrW" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+        <marker id="arrW2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+      </defs>
+
+      <!-- HUMAN LAYER (top) -->
+      <rect x="40" y="30" width="920" height="90" rx="12" fill="rgba(79,195,247,0.05)" stroke="#4fc3f7" stroke-dasharray="4 3"/>
+      <text x="60" y="55" class="svg-text" fill="#4fc3f7" font-size="14">HUMAN LAYER — unchanged</text>
+      <rect x="80" y="68" width="120" height="40" rx="6" fill="#181c26" stroke="#5a6175"/><text x="140" y="92" text-anchor="middle" class="svg-text-sm">👤 user</text>
+      <text x="220" y="92" class="svg-text-sm">→</text>
+      <rect x="250" y="68" width="160" height="40" rx="6" fill="#181c26" stroke="#5a6175"/><text x="330" y="92" text-anchor="middle" class="svg-text-sm">visual interface</text>
+      <text x="430" y="92" class="svg-text-sm">→</text>
+      <rect x="460" y="68" width="180" height="40" rx="6" fill="#181c26" stroke="#5a6175"/><text x="550" y="92" text-anchor="middle" class="svg-text-sm">HTML · CSS · JS · clicks</text>
+      <text x="660" y="92" class="svg-text-sm">→</text>
+      <rect x="690" y="68" width="230" height="40" rx="6" fill="#181c26" stroke="#5a6175"/><text x="805" y="92" text-anchor="middle" class="svg-text-sm">app logic (fetchProduct, addItemToCart…)</text>
+
+      <!-- BROWSER (middle, the mediator) -->
+      <rect x="40" y="150" width="920" height="110" rx="12" fill="rgba(255,222,0,0.06)" stroke="#ffde00" stroke-width="1.8"/>
+      <text x="60" y="175" class="svg-text" fill="#ffde00" font-size="14">BROWSER — Chrome 146+ · the WebMCP mediator</text>
+      <rect x="80" y="190" width="220" height="55" rx="8" fill="#181c26" stroke="#ffde00"/>
+      <text x="190" y="212" text-anchor="middle" class="svg-text">navigator.modelContext</text>
+      <text x="190" y="230" text-anchor="middle" class="svg-text-sm">tool registration + discovery</text>
+      <rect x="320" y="190" width="220" height="55" rx="8" fill="#181c26" stroke="#ffde00"/>
+      <text x="430" y="212" text-anchor="middle" class="svg-text">Permission &amp; Consent</text>
+      <text x="430" y="230" text-anchor="middle" class="svg-text-sm">human-in-the-loop per call</text>
+      <rect x="560" y="190" width="360" height="55" rx="8" fill="#181c26" stroke="#ffde00"/>
+      <text x="740" y="212" text-anchor="middle" class="svg-text">Security boundary</text>
+      <text x="740" y="230" text-anchor="middle" class="svg-text-sm">HTTPS · same-origin · CSP · session inheritance</text>
+
+      <!-- MACHINE LAYER (bottom) -->
+      <rect x="40" y="290" width="920" height="105" rx="12" fill="rgba(68,163,64,0.06)" stroke="#44a340" stroke-dasharray="4 3"/>
+      <text x="60" y="315" class="svg-text" fill="#44a340" font-size="14">MACHINE LAYER — NEW · schema-driven · agent-native</text>
+      <rect x="80" y="330" width="130" height="50" rx="6" fill="#181c26" stroke="#44a340"/><text x="145" y="352" text-anchor="middle" class="svg-text-sm">🤖 AI agent</text><text x="145" y="368" text-anchor="middle" class="svg-text-sm">in / next to browser</text>
+      <rect x="230" y="330" width="180" height="50" rx="6" fill="#181c26" stroke="#44a340"/><text x="320" y="352" text-anchor="middle" class="svg-text-sm">tool contracts (JSON Schema)</text><text x="320" y="368" text-anchor="middle" class="svg-text-sm">name · desc · inputSchema</text>
+      <rect x="430" y="330" width="230" height="50" rx="6" fill="#181c26" stroke="#44a340"/><text x="545" y="352" text-anchor="middle" class="svg-text-sm">Declarative API — &lt;form toolname=…&gt;</text>
+      <rect x="680" y="330" width="240" height="50" rx="6" fill="#181c26" stroke="#44a340"/><text x="800" y="352" text-anchor="middle" class="svg-text-sm">Imperative API — registerTool({…})</text>
+
+      <!-- vertical arrows showing both layers feeding the browser, browser brokering to app -->
+      <line x1="330" y1="108" x2="330" y2="190" class="svg-edge-active" marker-end="url(#arrW)"/>
+      <line x1="320" y1="330" x2="320" y2="245" class="svg-edge-active" marker-end="url(#arrW)"/>
+      <line x1="800" y1="330" x2="800" y2="245" class="svg-edge-active" marker-end="url(#arrW)"/>
+      <line x1="805" y1="108" x2="805" y2="190" stroke="#4fc3f7" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrW2)"/>
+
+      <!-- footer caption -->
+      <text x="500" y="412" text-anchor="middle" class="svg-text-sm" fill="#ffde00">same app logic powers both layers — humans click buttons, agents call tools</text>
+    </svg>
+  </div>
+
+  <h3>Two APIs — Declarative for forms, Imperative for everything else</h3>
+  <div class="prim-grid" style="grid-template-columns: 1fr 1fr;">
+    <div class="prim-card resource">
+      <span class="ctrl">declarative</span>
+      <div class="prim-icon">📋</div>
+      <h4>HTML form attributes</h4>
+      <div class="prim-sub">three new attrs on &lt;form&gt;</div>
+      <p>An HTML form is <em>already</em> a structured tool — it has an action, a method, and typed inputs. Three new attributes make it explicit to agents.</p>
+      <ul>
+        <li><code>toolname</code> — required, e.g. <code>"searchFlights"</code></li>
+        <li><code>tooldescription</code> — required, natural language</li>
+        <li><code>toolautosubmit</code> — optional, keeps human in the loop by default</li>
+        <li>Server differentiates via <code>SubmitEvent.agentInvoked</code></li>
+      </ul>
+      <div class="code-block" data-lang="html">&lt;form toolname=<span class="str">"searchFlights"</span>
+      tooldescription=<span class="str">"Search for flights between two airports."</span>&gt;
+  &lt;input name=<span class="str">"origin"</span>      pattern=<span class="str">"[A-Z]{3}"</span> required&gt;
+  &lt;input name=<span class="str">"destination"</span> pattern=<span class="str">"[A-Z]{3}"</span> required&gt;
+  &lt;input name=<span class="str">"date"</span>        type=<span class="str">"date"</span>          required&gt;
+  &lt;input name=<span class="str">"passengers"</span>  type=<span class="str">"number"</span> min=<span class="num">1</span> max=<span class="num">9</span>&gt;
+  &lt;button type=<span class="str">"submit"</span>&gt;Search Flights&lt;/button&gt;
+&lt;/form&gt;</div>
+    </div>
+
+    <div class="prim-card tool">
+      <span class="ctrl">imperative</span>
+      <div class="prim-icon">⚙️</div>
+      <h4>navigator.modelContext.registerTool()</h4>
+      <div class="prim-sub">JS API for dynamic workflows</div>
+      <p>For SPAs and anything that isn't a single form submission. The <code>execute</code> handler is just JavaScript — it calls the same functions the visual UI does. No separate API layer.</p>
+      <ul>
+        <li>Available on <code>navigator.modelContext</code> (HTTPS only)</li>
+        <li><code>registerTool()</code> adds one tool at a time</li>
+        <li><code>provideContext()</code> swaps the whole tool set (e.g. after sign-in)</li>
+        <li>Tools persist for the lifetime of the page (navigation clears them)</li>
+      </ul>
+      <div class="code-block" data-lang="js"><span class="kw">if</span> (<span class="str">'modelContext'</span> <span class="kw">in</span> navigator) {
+  navigator.modelContext.<span class="fn">registerTool</span>({
+    name: <span class="str">"addToCart"</span>,
+    description: <span class="str">"Add a product to the cart by SKU."</span>,
+    inputSchema: {
+      type: <span class="str">"object"</span>,
+      properties: {
+        sku:      { type: <span class="str">"string"</span> },
+        quantity: { type: <span class="str">"integer"</span>, minimum: <span class="num">1</span>, maximum: <span class="num">99</span> }
+      },
+      required: [<span class="str">"sku"</span>, <span class="str">"quantity"</span>]
+    },
+    execute: <span class="kw">async</span> (params) =&gt; {
+      <span class="kw">const</span> product = <span class="kw">await</span> <span class="fn">fetchProduct</span>(params.sku);
+      <span class="kw">const</span> r = <span class="kw">await</span> <span class="fn">addItemToCart</span>(product.id, params.quantity);
+      <span class="kw">return</span> { type: <span class="str">"text"</span>,
+               text: JSON.<span class="fn">stringify</span>({ success: <span class="kw">true</span>, cartTotal: r.total }) };
+    }
+  });
+}</div>
+    </div>
+  </div>
+
+  <h3>End-to-end interaction — sequence diagram</h3>
+  <div class="pipeline-wrap">
+    <h4>User · Agent · Browser · Page — one structured call replaces dozens of screenshot loops</h4>
+    <svg viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrWl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+        <marker id="arrWl2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4fc3f7"/></marker>
+        <marker id="arrWl3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ef5350"/></marker>
+      </defs>
+
+      <!-- four lifelines -->
+      <text x="125" y="30" text-anchor="middle" class="svg-text">👤 USER</text>
+      <text x="375" y="30" text-anchor="middle" class="svg-text" fill="#ffde00">🤖 AGENT</text>
+      <text x="625" y="30" text-anchor="middle" class="svg-text" fill="#44a340">🌐 BROWSER</text>
+      <text x="875" y="30" text-anchor="middle" class="svg-text" fill="#4fc3f7">📄 WEB PAGE</text>
+      <line x1="125" y1="40" x2="125" y2="400" stroke="#fff" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="375" y1="40" x2="375" y2="400" stroke="#ffde00" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="625" y1="40" x2="625" y2="400" stroke="#44a340" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="875" y1="40" x2="875" y2="400" stroke="#4fc3f7" stroke-width="1" stroke-dasharray="2 4"/>
+
+      <!-- phase 1: page load + registration -->
+      <rect x="40" y="55" width="170" height="22" rx="4" fill="rgba(79,195,247,0.15)" stroke="#4fc3f7"/>
+      <text x="125" y="71" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">① page loads</text>
+      <line x1="875" y1="95" x2="625" y2="95" stroke="#4fc3f7" stroke-width="1.8" marker-end="url(#arrWl2)"/>
+      <text x="750" y="89" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">registerTool(...) ×N</text>
+
+      <!-- phase 2: user request -->
+      <rect x="40" y="115" width="170" height="22" rx="4" fill="rgba(255,222,0,0.15)" stroke="#ffde00"/>
+      <text x="125" y="131" text-anchor="middle" class="svg-text-sm" fill="#ffde00">② user asks agent</text>
+      <line x1="125" y1="155" x2="375" y2="155" stroke="#ffde00" stroke-width="1.8" marker-end="url(#arrWl)"/>
+      <text x="250" y="149" text-anchor="middle" class="svg-text-sm" fill="#ffde00">"book a table at a Japanese spot Fri 8 PM"</text>
+
+      <!-- phase 3: tool discovery -->
+      <line x1="375" y1="185" x2="625" y2="185" stroke="#ffde00" stroke-width="1.8" marker-end="url(#arrWl)"/>
+      <text x="500" y="179" text-anchor="middle" class="svg-text-sm" fill="#ffde00">listTools()</text>
+      <line x1="625" y1="210" x2="375" y2="210" stroke="#44a340" stroke-width="1.8" marker-end="url(#arrWl)"/>
+      <text x="500" y="204" text-anchor="middle" class="svg-text-sm" fill="#44a340">[ search_restaurants, submit_booking, … ] + schemas</text>
+
+      <!-- phase 4: invoke + permission -->
+      <rect x="40" y="235" width="170" height="22" rx="4" fill="rgba(239,83,80,0.12)" stroke="#ef5350"/>
+      <text x="125" y="251" text-anchor="middle" class="svg-text-sm" fill="#ef5350">③ security checkpoint</text>
+      <line x1="375" y1="275" x2="625" y2="275" stroke="#ffde00" stroke-width="1.8" marker-end="url(#arrWl)"/>
+      <text x="500" y="269" text-anchor="middle" class="svg-text-sm" fill="#ffde00">executeTool("submit_booking", {...})</text>
+      <line x1="625" y1="300" x2="125" y2="300" stroke="#ef5350" stroke-width="1.8" marker-end="url(#arrWl3)"/>
+      <text x="375" y="294" text-anchor="middle" class="svg-text-sm" fill="#ef5350">🔐 permission prompt — user must consent</text>
+
+      <!-- phase 5: execution + return -->
+      <rect x="40" y="320" width="170" height="22" rx="4" fill="rgba(68,163,64,0.15)" stroke="#44a340"/>
+      <text x="125" y="336" text-anchor="middle" class="svg-text-sm" fill="#44a340">④ execute + return</text>
+      <line x1="625" y1="360" x2="875" y2="360" stroke="#44a340" stroke-width="1.8" marker-end="url(#arrWl2)"/>
+      <text x="750" y="354" text-anchor="middle" class="svg-text-sm" fill="#44a340">execute() handler runs in page context</text>
+      <line x1="875" y1="385" x2="375" y2="385" stroke="#4fc3f7" stroke-width="1.8" marker-end="url(#arrWl2)"/>
+      <text x="625" y="379" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">{ confirmed: true, referenceId: "UL-2094" }</text>
+    </svg>
+  </div>
+
+  <h3>Security model — two trust boundaries, one user consent loop</h3>
+  <div class="prim-grid" style="grid-template-columns: 1fr 1fr;">
+    <div class="prim-card resource">
+      <div class="prim-icon">🛡</div>
+      <h4>Boundary 1 — registration</h4>
+      <div class="prim-sub">site → browser → agent</div>
+      <p>The page exposes its tool surface. Protected by web platform defaults: HTTPS-only secure context, same-origin policy, and Content Security Policy still apply.</p>
+      <ul>
+        <li>HTTPS required — no <code>http://</code> or insecure contexts</li>
+        <li>Tools inherit the origin's security boundary</li>
+        <li>CSP enforcement carries through to tool registration</li>
+      </ul>
+    </div>
+    <div class="prim-card tool">
+      <div class="prim-icon">🔐</div>
+      <h4>Boundary 2 — invocation</h4>
+      <div class="prim-sub">agent → browser → page (bidirectional)</div>
+      <p>The high-risk step. Untrusted agent input flows in; potentially sensitive results flow out. The browser inserts a human-in-the-loop consent prompt per invocation.</p>
+      <ul>
+        <li>Per-call consent — user explicitly approves each tool execution</li>
+        <li><code>SubmitEvent.agentInvoked</code> lets servers tell apart human vs agent</li>
+        <li><strong>Read-only hints</strong> let safe query tools skip the prompt</li>
+        <li>Tools <strong>inherit the user's existing session</strong> — no OAuth between agent and site needed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The deeper design insight</div>
+    <div class="uc-title">Registering tools <em>is</em> the AI safety policy</div>
+    <p>When you call <code>registerTool('search_restaurants', …)</code> you are saying <em>"this action is intentionally available to AI agents."</em> If you never register <code>cancel_booking</code>, no agent can ever cancel a booking on your site — not because of a runtime block, but because the surface doesn't exist. Compare this to the screenshot/DOM era where AI safety was an after-the-fact detection problem. WebMCP makes it a deliberate, auditable design decision upfront. The <strong>"deadly triad"</strong> (one agent with simultaneous access to banking, email, and social tabs) is exactly why per-invocation consent + domain-level isolation are non-negotiable in the spec.</p>
+  </div>
+
+  <h3>MCP (Anthropic, 2024) vs WebMCP (W3C, 2026)</h3>
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead><tr><th>Dimension</th><th>MCP — Anthropic</th><th>WebMCP — W3C</th></tr></thead>
+      <tbody>
+        <tr><td>Scope</td><td>Desktop / server / IDE tools</td><td>Browser tab, in-page tools</td></tr>
+        <tr><td>Transport</td><td>JSON-RPC 2.0 over stdio / HTTP+SSE</td><td>Browser-native API — no wire protocol</td></tr>
+        <tr><td>Hosting</td><td>Separate server process (Python / Node)</td><td><span class="badge green">Just JavaScript on the page</span></td></tr>
+        <tr><td>Auth</td><td>OAuth 2.0 for remote servers</td><td><span class="badge green">Inherits user's browser session</span></td></tr>
+        <tr><td>Discovery</td><td><code>tools/list</code> after init</td><td><code>navigator.modelContext</code> on page load</td></tr>
+        <tr><td>Lifespan</td><td>For session duration</td><td>Per-page — navigation clears tools</td></tr>
+        <tr><td>Consent</td><td>Per host UX (Claude Desktop prompts)</td><td><span class="badge green">Browser-mediated, per invocation</span></td></tr>
+        <tr><td>Status</td><td>Production · spec 2024-11-05</td><td>W3C Draft CG Report · Chrome 146 Canary</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Getting started — Chrome 146 Canary, behind a flag</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Enable the flag</h4>
+        <p>Install Chrome Canary, go to <code>chrome://flags</code>, search <em>"WebMCP for testing"</em>, enable, restart.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>Install the Model Context Tool Inspector extension</h4>
+        <p>Lets you see which tools a page has registered, fire them by hand, and inspect schemas live.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>Feature-detect &amp; register your first tool</h4>
+        <p>One conditional, one call. From here, the tool is discoverable by any WebMCP-aware agent that opens your page.</p>
+        <div class="code-block" data-lang="js"><span class="kw">if</span> (<span class="str">'modelContext'</span> <span class="kw">in</span> navigator) {
+  navigator.modelContext.<span class="fn">registerTool</span>({
+    name: <span class="str">"addTask"</span>,
+    description: <span class="str">"Create a new task with optional priority."</span>,
+    inputSchema: {
+      type: <span class="str">"object"</span>,
+      properties: {
+        description: { type: <span class="str">"string"</span> },
+        priority:    { type: <span class="str">"string"</span>, enum: [<span class="str">"low"</span>, <span class="str">"medium"</span>, <span class="str">"high"</span>] }
+      },
+      required: [<span class="str">"description"</span>]
+    },
+    execute: <span class="kw">async</span> ({ description, priority = <span class="str">"medium"</span> }) =&gt; {
+      <span class="kw">const</span> task = <span class="fn">addTaskToStore</span>({ description, priority });
+      <span class="fn">updateTaskListUI</span>();
+      <span class="kw">return</span> { type: <span class="str">"text"</span>, text: JSON.<span class="fn">stringify</span>({ success: <span class="kw">true</span>, task }) };
+    }
+  });
+}</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Known limitations (Feb 2026)</h3>
+  <div class="pitfall-grid">
+    <div class="pitfall">
+      <h4>Tool discovery requires navigation</h4>
+      <p>No way yet to learn a site's tool surface without visiting it. A <code>.well-known/webmcp</code> manifest is on the roadmap.</p>
+    </div>
+    <div class="pitfall">
+      <h4>Client-side only</h4>
+      <p>WebMCP tools live in frontend JavaScript. For direct backend access, Anthropic's classic MCP is still the right protocol.</p>
+    </div>
+    <div class="pitfall">
+      <h4>Single-tab scope</h4>
+      <p>Tools persist only for the lifetime of one page. Navigation wipes them. No cross-tab state via the API.</p>
+    </div>
+    <div class="pitfall">
+      <h4>Evolving API surface</h4>
+      <p>Draft CG Report, not a finalised standard. Expect breaking changes through 2026.</p>
+    </div>
+    <div class="pitfall">
+      <h4>Browser support narrow</h4>
+      <p>Chrome Canary only, behind a flag. Edge expected. No Firefox / Safari commitment yet.</p>
+    </div>
+    <div class="pitfall">
+      <h4>Polyfill required for breadth</h4>
+      <p>For now, ship MCP-B as a polyfill if you need WebMCP behaviour outside Canary.</p>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The bigger picture</div>
+    <div class="uc-title">A second, machine-native interface layer for the web</div>
+    <p>For 30 years the web had exactly one interface — pixels rendered for human eyes. WebMCP introduces a second: a structured, schema-driven layer agents consume natively. Anand Sagar (Google) calls it <em>"the USB-C of AI agent interactions with the web"</em> — one standardised socket replacing the current tangle of bespoke scrapers and click-bots. Adoption depends on developers shipping tools, vendors beyond Chrome implementing the spec, and the W3C process completing — but the trajectory is clear.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 12 — SECURITY
+============================================================ -->
+<div class="section-divider fade-in" id="security">
+  <div class="section-number">12</div>
+  <h2>Security &amp; trust</h2>
+  <p>MCP servers execute arbitrary code on your behalf and can read whatever you point them
+  at. The protocol bakes in four trust principles that every implementor must respect.</p>
+</div>
+
+<section class="fade-in">
+  <div class="fail-grid">
+    <div class="fail-q">
+      <div class="qnum">1</div>
+      <h5>User consent &amp; control</h5>
+      <p>Every data access and every tool invocation requires explicit user approval. The host UI must surface what is about to happen, in plain language.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">2</div>
+      <h5>Data privacy</h5>
+      <p>The host never transmits resource data to other servers (or anywhere else) without user consent. Servers see only the slice of context they need.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">3</div>
+      <h5>Tool safety</h5>
+      <p>Tools = arbitrary code execution. Treat unknown servers like running random scripts off the internet — because that's exactly what they are.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">4</div>
+      <h5>Sampling controls</h5>
+      <p>When a server requests an LLM call, the user/client approves the prompt, picks the model, and decides what the server gets to see back.</p>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Practical rules</div>
+    <div class="uc-title">Three commandments before installing any MCP server</div>
+    <p><strong>1.</strong> Read the source (or trust the publisher). The official <code>@modelcontextprotocol/*</code> servers and verified vendor servers (Shopify, Grafana, GitHub) are safe defaults. <strong>2.</strong> Scope filesystem roots tightly — don't hand a random server <code>/</code> or <code>C:\</code>. <strong>3.</strong> Use OAuth 2.0 for remote servers; never paste long-lived API keys into a server config you didn't write.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 13 — PITFALLS
+============================================================ -->
+<div class="section-divider fade-in" id="pitfalls">
+  <div class="section-number">13</div>
+  <h2>Production pitfalls</h2>
+  <p>What breaks first when an MCP server goes from "works on my desktop" to "serves an org."</p>
+</div>
+
+<section class="fade-in">
+  <div class="pitfall-grid">
+    <div class="pitfall">
+      <h4>Tool description rot</h4>
+      <p>The LLM picks tools by name + description. Vague descriptions → wrong tool gets called → silent quality loss.</p>
+      <span class="fix"><strong>Fix:</strong> write USE FOR / DO NOT USE FOR sections; include 3–4 example queries; test routing with real prompts.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Returning too much text</h4>
+      <p>A scraper that returns 50 KB per call burns the context window in three tool uses. The LLM then truncates the conversation.</p>
+      <span class="fix"><strong>Fix:</strong> truncate to ~4–8 KB per tool result; paginate; return summaries with optional "fetch full" follow-up.</span>
+    </div>
+    <div class="pitfall">
+      <h4>No timeouts on remote calls</h4>
+      <p>A slow upstream API blocks the whole tool call, the client gives up, the user sees "tool failed" with no detail.</p>
+      <span class="fix"><strong>Fix:</strong> wrap every HTTP call in <code>httpx</code> timeouts; return structured error objects with <code>isError: true</code>.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Secrets in config files</h4>
+      <p>Pasting <code>OPENAI_API_KEY=sk-...</code> into <code>claude_desktop_config.json</code> puts it in a world-readable file forever.</p>
+      <span class="fix"><strong>Fix:</strong> load secrets via <code>.env</code> + <code>python-dotenv</code>; for remote servers use OAuth 2.0; never commit configs.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Forgetting capability negotiation</h4>
+      <p>Calling <code>resources/subscribe</code> on a server that didn't declare <code>resources.subscribe</code> just errors out — but only at runtime.</p>
+      <span class="fix"><strong>Fix:</strong> always check the <code>initialize</code> response capabilities map before calling optional features.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Servers that read the whole conversation</h4>
+      <p>Resist the temptation to slurp chat history into the server. It breaks isolation, leaks data, and violates the design principle.</p>
+      <span class="fix"><strong>Fix:</strong> the host curates context. If you need state, store it under a server-owned URI and expose via Resources.</span>
+    </div>
+    <div class="pitfall">
+      <h4>One mega-server with 50 tools</h4>
+      <p>The LLM has to scan every tool description on every turn. Routing degrades fast past ~15–20 tools.</p>
+      <span class="fix"><strong>Fix:</strong> split by domain — one server per logical capability area. Composability is free; tool sprawl is not.</span>
+    </div>
+    <div class="pitfall">
+      <h4>No version pinning</h4>
+      <p><code>npx -y @modelcontextprotocol/server-filesystem</code> fetches latest on every launch. A broken release silently breaks your workflow.</p>
+      <span class="fix"><strong>Fix:</strong> pin a version (<code>@1.2.3</code>) in production configs; bump deliberately.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 14 — WHAT'S NEXT: 2026-07-28 RELEASE CANDIDATE
+============================================================ -->
+<div class="section-divider fade-in" id="next">
+  <div class="section-number">14</div>
+  <h2>What's next — the 2026-07-28 RC</h2>
+  <p>The next MCP spec release candidate lands on <strong>2026-07-28</strong>. The headline:
+  MCP becomes <strong>stateless at the protocol layer</strong>. The deeper story is that
+  every part of an agent workflow — state, capabilities, authorisation, observability —
+  gets pushed into <em>explicit, visible primitives</em>. Plumbing made auditable.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>Before RC vs After RC — where state lives</h4>
+    <svg viewBox="0 0 1000 320" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrN" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/></marker>
+      </defs>
+
+      <!-- BEFORE -->
+      <text x="230" y="30" text-anchor="middle" class="svg-text" fill="#ef5350">BEFORE — sticky Mcp-Session-Id</text>
+      <rect x="40" y="50" width="170" height="50" rx="8" fill="#181c26" stroke="#ffde00"/>
+      <text x="125" y="79" text-anchor="middle" class="svg-text">client</text>
+      <rect x="260" y="50" width="170" height="50" rx="8" fill="rgba(239,83,80,0.08)" stroke="#ef5350"/>
+      <text x="345" y="73" text-anchor="middle" class="svg-text">load balancer</text>
+      <text x="345" y="90" text-anchor="middle" class="svg-text-sm" fill="#ef5350">must be sticky-aware</text>
+      <rect x="40" y="130" width="390" height="60" rx="8" fill="#181c26" stroke="#ef5350"/>
+      <text x="235" y="152" text-anchor="middle" class="svg-text">server A (holds session 7af2)</text>
+      <text x="235" y="170" text-anchor="middle" class="svg-text-sm" fill="#ef5350">routing breaks if request hits server B</text>
+      <line x1="210" y1="75" x2="260" y2="75" class="svg-edge-active" marker-end="url(#arrN)"/>
+      <line x1="345" y1="100" x2="235" y2="130" stroke="#ffde00" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrN)"/>
+      <text x="55" y="215" class="svg-text-sm" fill="#ef5350">⚠ shared session stores · gateway must speak MCP · scale-out is fragile</text>
+
+      <!-- vertical divider -->
+      <line x1="500" y1="40" x2="500" y2="260" stroke="#5a6175" stroke-dasharray="4 4"/>
+
+      <!-- AFTER -->
+      <text x="770" y="30" text-anchor="middle" class="svg-text" fill="#44a340">AFTER — self-contained requests</text>
+      <rect x="540" y="50" width="170" height="50" rx="8" fill="#181c26" stroke="#ffde00"/>
+      <text x="625" y="79" text-anchor="middle" class="svg-text">client</text>
+      <rect x="760" y="50" width="200" height="50" rx="8" fill="rgba(68,163,64,0.08)" stroke="#44a340"/>
+      <text x="860" y="73" text-anchor="middle" class="svg-text">any HTTP load balancer</text>
+      <text x="860" y="90" text-anchor="middle" class="svg-text-sm" fill="#44a340">Mcp-Method / Mcp-Name headers</text>
+      <rect x="540" y="130" width="130" height="60" rx="8" fill="#181c26" stroke="#44a340"/>
+      <text x="605" y="165" text-anchor="middle" class="svg-text">server A</text>
+      <rect x="690" y="130" width="130" height="60" rx="8" fill="#181c26" stroke="#44a340"/>
+      <text x="755" y="165" text-anchor="middle" class="svg-text">server B</text>
+      <rect x="840" y="130" width="130" height="60" rx="8" fill="#181c26" stroke="#44a340"/>
+      <text x="905" y="165" text-anchor="middle" class="svg-text">server C</text>
+      <line x1="710" y1="75" x2="760" y2="75" class="svg-edge-active" marker-end="url(#arrN)"/>
+      <line x1="860" y1="100" x2="605" y2="130" stroke="#ffde00" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrN)"/>
+      <line x1="860" y1="100" x2="755" y2="130" stroke="#ffde00" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrN)" opacity="0.7"/>
+      <line x1="860" y1="100" x2="905" y2="130" stroke="#ffde00" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrN)" opacity="0.7"/>
+      <text x="555" y="215" class="svg-text-sm" fill="#44a340">✓ any instance handles any request · scales like normal HTTP</text>
+      <text x="555" y="232" class="svg-text-sm" fill="#44a340">✓ protocol version + capabilities travel <em>per request</em></text>
+    </svg>
+  </div>
+
+  <h3>Stateless protocol — but state doesn't disappear, it becomes <em>explicit</em></h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">🫥</span>Old shape — hidden in transport metadata</h4>
+      <ul>
+        <li>Server returned <code>Mcp-Session-Id</code>; client had to carry it</li>
+        <li>Sticky-session load balancers, shared session stores</li>
+        <li>Workflow state invisible to the model — pure plumbing</li>
+        <li>Gateways had to understand MCP to route correctly</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🪟</span>New shape — visible handles in the request body</h4>
+      <ul>
+        <li>Server returns explicit handles: <code>basket_id</code>, <code>browser_id</code>, <code>repo_id</code></li>
+        <li>Model passes them back in subsequent <code>tools/call</code> invocations</li>
+        <li>State is now part of agent reasoning — and the audit log</li>
+        <li>Tool authors own scoping / validation / expiry of each handle</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="code-block" data-lang="json"><span class="cm">// step 1 — server returns a handle</span>
+{ <span class="str">"basket_id"</span>: <span class="str">"bkt_123"</span> }
+
+<span class="cm">// step 2 — model passes it back, any server instance can serve this</span>
+{ <span class="str">"basket_id"</span>: <span class="str">"bkt_123"</span>, <span class="str">"item_id"</span>: <span class="str">"sku_456"</span> }</div>
+
+  <h3>Extensions — a real lifecycle for capabilities that aren't core</h3>
+  <div class="prim-grid">
+    <div class="prim-card resource">
+      <div class="prim-icon">📦</div>
+      <h4>Extensions framework</h4>
+      <div class="prim-sub">reverse-DNS · own repo · own version</div>
+      <p>Extensions get IDs, dedicated <code>ext-*</code> repos, delegated maintainers, and an extensions map negotiated during <code>initialize</code>. Core stays small; the ecosystem still experiments.</p>
+      <ul>
+        <li>Client + server advertise extension support during init</li>
+        <li>Both sides versioned independently from the main spec</li>
+        <li>Connection still works if an extension isn't supported on one side</li>
+      </ul>
+    </div>
+    <div class="prim-card tool">
+      <div class="prim-icon">🖼</div>
+      <h4>MCP Apps</h4>
+      <div class="prim-sub">first official extension</div>
+      <p>Servers can ship interactive HTML interfaces the host renders in a sandboxed iframe. UI templates are declared up-front so hosts can prefetch, cache, and security-review them.</p>
+      <ul>
+        <li>Button clicks in the app route back through MCP JSON-RPC</li>
+        <li>Same audit + consent path as a direct tool call</li>
+        <li>Useful for rich data displays, configurators, dashboards</li>
+      </ul>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">⏳</div>
+      <h4>Tasks</h4>
+      <div class="prim-sub">second official extension</div>
+      <p>Long-running work without polling tricks. A <code>tools/call</code> can return a task handle; the client drives it with <code>tasks/get</code>, <code>tasks/update</code>, <code>tasks/cancel</code>.</p>
+      <ul>
+        <li>Server-directed — server decides when a call becomes a task</li>
+        <li><code>tasks/list</code> intentionally removed (no sessions = no safe scoping)</li>
+        <li>Cleaner than per-server polling protocols</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Deprecations — MCP narrows its responsibilities</h3>
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead><tr><th>Deprecated feature</th><th>Why</th><th>New direction</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Roots</strong></td><td>Workspace scoping bled into the protocol</td><td>Tool parameters · resource URIs · server config</td></tr>
+        <tr><td><strong>Sampling</strong></td><td>Model access overlapped with provider APIs</td><td><span class="badge yellow">Direct LLM provider integration</span></td></tr>
+        <tr><td><strong>Logging</strong></td><td>Distributed-systems observability is a solved problem</td><td><code>stderr</code> for stdio · <strong>OpenTelemetry</strong> for structured traces</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Deprecation policy (new in this RC)</div>
+    <div class="uc-title">12 months minimum between deprecation and removal</div>
+    <p>Methods + capability flags are annotation-only for now. They still work in this release and in every spec version published within a year of it. Removal requires a separate SEP. Translation: nothing breaks tomorrow — but start planning the migration. Distributed-systems observability belongs with OpenTelemetry; model selection belongs with provider APIs; workspace scope belongs in tool inputs. MCP is keeping <em>only</em> the client-server contract it owns best.</p>
+  </div>
+
+  <h3>Other RC changes worth flagging</h3>
+  <div class="prim-grid">
+    <div class="prim-card tool">
+      <div class="prim-icon">🔑</div>
+      <h4>Authorization tightening</h4>
+      <div class="prim-sub">OAuth / OIDC sharper rules</div>
+      <ul>
+        <li>Clients must validate <em>which issuer</em> sent the auth response</li>
+        <li>Credentials stay bound to the AS that issued them</li>
+        <li>Token-refresh semantics clarified for multi-server clients</li>
+        <li>Desktop / CLI clients get explicit localhost-redirect support</li>
+      </ul>
+    </div>
+    <div class="prim-card resource">
+      <div class="prim-icon">📐</div>
+      <h4>JSON Schema 2020-12 (full)</h4>
+      <div class="prim-sub">tool schemas can finally describe reality</div>
+      <ul>
+        <li>Inputs keep <code>type: "object"</code> root but allow composition + conditionals + <code>$ref</code></li>
+        <li>Output schemas are unrestricted; <code>structuredContent</code> any JSON</li>
+        <li>Implementers warned: cap validation work, don't blindly follow external <code>$ref</code></li>
+      </ul>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">🏛</div>
+      <h4>Governance + conformance</h4>
+      <div class="prim-sub">SEPs need matching scenarios</div>
+      <ul>
+        <li>Feature lifecycle: <code>Active</code> → <code>Deprecated</code> → <code>Removed</code> with min 12-month gap</li>
+        <li>Standards-Track SEPs must ship conformance tests to reach <code>Final</code></li>
+        <li>Smaller implementations have a realistic shot at compatibility</li>
+        <li>Less risk that the protocol drifts toward one vendor's behaviour</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Migration checklist for the 10-week window</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Probe statelessness — does your server need sticky sessions?</h4>
+        <p>Send <code>tools/call</code> across instances behind a round-robin LB. Anywhere it breaks is a hidden session dependency to convert to an explicit handle.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>Inventory every piece of cross-call state</h4>
+        <p>Repo paths, browser sessions, deployment envs, task IDs. Each one becomes a scoped, validated, expirable handle visible to the client.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>Plan migration off Roots, Sampling, Logging</h4>
+        <p>Annotation-only today but on the clock. Move workspace scope into tool inputs, model calls to provider APIs, telemetry to OpenTelemetry.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h4>Audit authorisation flows</h4>
+        <p>Issuer validation, credential binding, token refresh, localhost redirects. Multi-server clients especially — weak OAuth semantics become security incidents at scale.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <h4>Tighten tool schemas — but cap their complexity</h4>
+        <p>Lean on full JSON Schema 2020-12 for honest input contracts. Don't recurse external <code>$ref</code> blindly; bound validation work.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div>
+        <h4>Feed weird cases back to the spec repo</h4>
+        <p>Open protocols get stronger when implementers surface real-world friction <em>before</em> the spec hardens. The <a href="https://urldefense.com/v3/__https://github.com/modelcontextprotocol/modelcontextprotocol__;!!OiUq6JES4A!ghbEVSSnhjtaItKDoTwGHhHF0JnHZM7c5cQVARhfP94sZOJhPTWIA0Sa3XsiLRD0LBN8mTXjr0IbnziL52Y5UDXR9fWBlKU$">spec repo</a> + Working Group Discord are the right channels.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The strategic read</div>
+    <div class="uc-title">MCP is choosing operational clarity over feature creep</div>
+    <p>Every change in this RC trades convenience for visibility. Stateless protocol over hidden sessions. Explicit handles over magic IDs. Extensions framework over kitchen-sink core. Deprecations of Roots/Sampling/Logging because other systems already own those concerns better. Conformance tests over interpretation. A protocol that owns the right things and lets the ecosystem grow around it — that's the difference between a standard and a branded integration format.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <p><strong>MCP — Model Context Protocol · Zero to Hero</strong> · companion to <a href="rag-zero-to-hero.html">RAG (Zero to Hero)</a>.</p>  
+</footer>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+// Scroll progress bar
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  progressBar.style.width = pct + '%';
+});
+
+// Fade-in on scroll
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
+
+// Active nav highlighting based on visible section-divider
+const navLinks = document.querySelectorAll('nav .nav-links a');
+window.addEventListener('scroll', () => {
+  const dividers = document.querySelectorAll('.section-divider');
+  let activeIdx = -1;
+  dividers.forEach((d, i) => {
+    const r = d.getBoundingClientRect();
+    if (r.top < 200) activeIdx = i;
+  });
+  navLinks.forEach((a, i) => a.classList.toggle('active', i === activeIdx));
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple RAG — A Visual Deep Dive | AI Innovation Summit 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jd-green: #378b29;
+  --jd-green-bright: #44a340;
+  --yellow: #ffde00;
+  --yellow-soft: #fff3b0;
+  --bg: #0a0c10;
+  --bg-elevated: #12151c;
+  --bg-card: #181c26;
+  --bg-card-hover: #1e2336;
+  --text: #ffffff;
+  --text-muted: #c8ccd6;
+  --text-dim: #8b92a8;
+  --accent: #4fc3f7;
+  --accent2: #ab47bc;
+  --accent3: #ff7043;
+  --danger: #ef5350;
+  --success: #66bb6a;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-glow: 0 0 40px rgba(255,222,0,0.2);
+  --font: 'Inter', -apple-system, sans-serif;
+  --display: 'Space Grotesk', 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; font-size: 17px; overflow-x: hidden; }
+
+/* ===== NAV & PROGRESS ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(10,12,16,0.85); backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border); padding: 0 2.5rem; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+nav .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.95rem; color: var(--yellow); font-family: var(--display); flex-shrink: 0; }
+nav .brand svg { width: 26px; height: 26px; }
+nav .nav-links {
+  display: flex; gap: 2px; list-style: none;
+  flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; -ms-overflow-style: none;
+  max-width: 100%;
+}
+nav .nav-links::-webkit-scrollbar { display: none; }
+nav .nav-links li { flex-shrink: 0; }
+nav .nav-links a {
+  color: var(--text-muted); text-decoration: none;
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 0.8rem; font-weight: 500; transition: var(--transition);
+  white-space: nowrap;
+}
+nav .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+nav .nav-links a.active { color: var(--yellow); background: rgba(255,222,0,0.12); }
+.progress-bar {
+  position: fixed; top: 64px; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--jd-green-bright), var(--yellow));
+  z-index: 1001; transition: width 0.15s; box-shadow: 0 0 12px rgba(255,222,0,0.5);
+}
+
+/* ===== LAYOUT ===== */
+section { max-width: 1140px; margin: 0 auto; padding: 3rem; text-align: left; }
+.section-divider { max-width: 1140px; margin: 0 auto; padding: 4rem 3rem 2rem; }
+.section-divider .section-number {
+  font-size: 6rem; font-weight: 900; color: var(--yellow);
+  opacity: 0.85; line-height: 1; letter-spacing: -0.04em; font-family: var(--display);
+}
+.section-divider h2 {
+  font-size: 3.5rem; font-weight: 900; margin-top: 0.25rem;
+  letter-spacing: -0.03em; color: var(--jd-green-bright); font-family: var(--display);
+}
+.section-divider p { color: var(--text-muted); font-size: 1.15rem; max-width: 720px; margin-top: 1rem; }
+
+h1, h2, h3, h4 { font-family: var(--display); }
+h1 { font-size: 3.5rem; font-weight: 700; line-height: 1.05; color: var(--jd-green-bright); }
+h2 { font-size: 2.8rem; font-weight: 700; color: var(--jd-green-bright); }
+h3 { font-size: 1.5rem; font-weight: 700; color: var(--jd-green-bright); }
+h4 { font-size: 1.15rem; font-weight: 600; color: var(--text); }
+
+.subtitle { color: var(--text-muted); font-size: 1.2rem; margin-top: 0.75rem; max-width: 760px; }
+code { font-family: var(--mono); color: var(--yellow); font-size: 0.9em; }
+
+/* ===== HERO ===== */
+.hero {
+  min-height: 70vh; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+  padding: 6rem 3rem; max-width: 1140px; margin: 0 auto; position: relative;
+}
+.hero::before {
+  content: ''; position: fixed; top: -30%; right: -20%;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(255,222,0,0.06) 0%, transparent 60%);
+  animation: heroPulse 10s ease-in-out infinite; pointer-events: none;
+}
+.hero::after {
+  content: ''; position: fixed; bottom: -20%; left: -10%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(68,163,64,0.05) 0%, transparent 60%);
+  animation: heroPulse 12s ease-in-out infinite reverse; pointer-events: none;
+}
+@keyframes heroPulse {
+  0%,100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  background: linear-gradient(135deg, var(--jd-green-bright) 0%, var(--yellow) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: -0.04em; line-height: 1;
+}
+.hero h1 .h1-sub {
+  display: inline-block;
+  font-size: 0.32em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  margin-left: 0.4em;
+  -webkit-text-fill-color: var(--text-muted);
+  background: none;
+  opacity: 0.95;
+}
+.hero .subtitle { font-size: 1.35rem; max-width: 720px; margin-top: 1.25rem; }
+.session-info { display: flex; gap: 1.25rem; margin-top: 3.5rem; flex-wrap: wrap; }
+.session-stat {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem 2rem; text-align: center;
+  box-shadow: var(--shadow-card); transition: var(--transition);
+}
+.session-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.5), var(--shadow-glow); }
+.session-stat .number { font-size: 2.5rem; font-weight: 900; color: var(--yellow); font-family: var(--display); line-height: 1; }
+.session-stat .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ===== SVG SHARED ===== */
+.svg-text { font-family: var(--display); font-size: 13px; fill: #fff; font-weight: 600; }
+.svg-text-sm { font-family: var(--mono); font-size: 11px; fill: #c8ccd6; }
+.svg-edge { stroke: #5a6175; stroke-width: 1.4; fill: none; }
+.svg-edge-active {
+  stroke: #ffde00; stroke-width: 1.8; fill: none;
+  stroke-dasharray: 5 4; animation: dashflow 1.4s linear infinite;
+}
+@keyframes dashflow { to { stroke-dashoffset: -36; } }
+.svg-pulse { animation: nodePulse 2.2s ease-in-out infinite; }
+@keyframes nodePulse {
+  0%,100% { filter: drop-shadow(0 0 0 rgba(255,222,0,0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(255,222,0,0.7)); }
+}
+
+/* ===== COMPARISON CARDS ===== */
+.cmp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  margin: 2rem 0 3rem;
+}
+@media (max-width: 900px) { .cmp-grid { grid-template-columns: 1fr; } }
+.cmp-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.6rem 1.7rem;
+}
+.cmp-card.bad { border-left: 3px solid var(--danger); }
+.cmp-card.good { border-left: 3px solid var(--success); }
+.cmp-card h4 { font-size: 1.05rem; margin-bottom: 0.6rem; letter-spacing: 0.4px; }
+.cmp-card.bad h4 { color: var(--danger); }
+.cmp-card.good h4 { color: var(--success); }
+.cmp-card .icon { font-size: 1.4rem; margin-right: 0.4rem; }
+.cmp-card ul { list-style: none; margin-top: 0.6rem; }
+.cmp-card li {
+  padding: 0.4rem 0 0.4rem 1.4rem; position: relative;
+  font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;
+}
+.cmp-card.bad li::before { content: '✗'; color: var(--danger); position: absolute; left: 0; font-weight: 700; }
+.cmp-card.good li::before { content: '✓'; color: var(--success); position: absolute; left: 0; font-weight: 700; }
+
+/* ===== FAILURE-MODE QUESTIONS ===== */
+.fail-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  margin: 2rem 0 2.5rem;
+}
+@media (max-width: 900px) { .fail-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .fail-grid { grid-template-columns: 1fr; } }
+.fail-q {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.2rem 1.1rem; transition: transform 0.2s, border-color 0.2s;
+}
+.fail-q:hover { transform: translateY(-3px); border-color: var(--yellow); }
+.fail-q .qnum {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--yellow); color: #0a0c10; font-family: var(--mono);
+  font-weight: 700; font-size: 0.85rem; margin-bottom: 0.7rem;
+}
+.fail-q h5 { font-family: var(--display); color: var(--yellow); font-size: 0.95rem; margin-bottom: 0.4rem; }
+.fail-q p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ===== PIPELINE FLOW BLOCK ===== */
+.pipeline-wrap {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem; margin: 2rem 0;
+  box-shadow: var(--shadow-card); overflow-x: auto;
+}
+.pipeline-wrap h4 {
+  font-family: var(--display); color: var(--yellow);
+  font-size: 1.1rem; margin-bottom: 1rem; text-align: center;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.pipeline-wrap svg { display: block; width: 100%; min-width: 760px; height: auto; }
+
+/* ===== TABS (Generic — used by 3 sections) ===== */
+.tabstrip {
+  display: grid; gap: 0.5rem;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 0.5rem; margin: 2rem 0 1.5rem;
+}
+.tabstrip.c5 { grid-template-columns: repeat(5, 1fr); }
+.tabstrip.c4 { grid-template-columns: repeat(4, 1fr); }
+.tabstrip.c3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .tabstrip.c5, .tabstrip.c4, .tabstrip.c3 { grid-template-columns: repeat(2, 1fr); } }
+.tab-btn {
+  background: transparent; border: 1px solid transparent;
+  color: var(--text-muted); padding: 0.9rem 0.7rem;
+  border-radius: 8px; cursor: pointer;
+  font-family: var(--display); font-size: 0.85rem; font-weight: 600;
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  transition: all 0.2s;
+}
+.tab-btn:hover { background: rgba(255,222,0,0.06); color: var(--text); }
+.tab-btn .tb-icon { font-size: 1.3rem; }
+.tab-btn.active {
+  background: rgba(255,222,0,0.12); border-color: var(--yellow);
+  color: var(--yellow); box-shadow: 0 0 18px rgba(255,222,0,0.18);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeInUp 0.4s ease; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.panel-grid {
+  display: grid; grid-template-columns: 1.15fr 1fr; gap: 1.5rem;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.8rem;
+}
+@media (max-width: 900px) { .panel-grid { grid-template-columns: 1fr; } }
+.panel-visual {
+  background: rgba(10,12,16,0.5); border-radius: 12px; padding: 1rem;
+  border: 1px solid var(--border);
+}
+.panel-visual svg { width: 100%; height: auto; }
+.panel-caption { font-size: 0.78rem; color: var(--text-dim); text-align: center; margin-top: 0.6rem; font-style: italic; }
+.panel-info h3 {
+  font-family: var(--display); color: var(--yellow);
+  font-size: 1.4rem; margin-bottom: 0.6rem;
+}
+.panel-info .tagline { color: var(--text-muted); font-style: italic; margin-bottom: 1rem; font-size: 0.95rem; }
+.panel-info ul.bullets { list-style: none; margin: 0.8rem 0; }
+.panel-info ul.bullets li {
+  padding: 0.45rem 0 0.45rem 1.5rem; position: relative;
+  font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;
+}
+.panel-info ul.bullets li::before {
+  content: '▸'; color: var(--jd-green-bright);
+  position: absolute; left: 0.3rem; font-weight: 700;
+}
+.panel-info ul.bullets strong { color: var(--text); }
+
+/* Use / Avoid pill cards */
+.meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.9rem 0; }
+@media (max-width: 600px) { .meta-row { grid-template-columns: 1fr; } }
+.meta-card {
+  background: rgba(10,12,16,0.5); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.8rem 0.9rem;
+}
+.meta-card h5 {
+  font-family: var(--display); font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;
+}
+.meta-card.use h5 { color: var(--success); }
+.meta-card.avoid h5 { color: var(--danger); }
+.meta-card ul { list-style: none; }
+.meta-card li {
+  font-size: 0.78rem; color: var(--text-muted);
+  padding: 0.2rem 0 0.2rem 1.2rem; position: relative; line-height: 1.45;
+}
+.meta-card.use li::before { content: '✓'; color: var(--success); position: absolute; left: 0; font-weight: 700; }
+.meta-card.avoid li::before { content: '✗'; color: var(--danger); position: absolute; left: 0; font-weight: 700; }
+
+/* Use-case highlight */
+.usecase {
+  background: linear-gradient(135deg, rgba(68,163,64,0.08), rgba(255,222,0,0.05));
+  border: 1px solid rgba(255,222,0,0.2);
+  border-radius: 10px; padding: 0.9rem 1rem; margin: 0.9rem 0;
+}
+.usecase .uc-label {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--yellow);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem;
+}
+.usecase .uc-title { font-family: var(--display); font-weight: 700; color: var(--text); font-size: 0.98rem; margin-bottom: 0.3rem; }
+.usecase p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+/* Code blocks */
+.code-block {
+  background: #050608; border: 1px solid var(--border);
+  border-radius: 10px; padding: 1rem 1.1rem; margin-top: 0.9rem;
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.65;
+  color: #e6e8ee; overflow-x: auto; position: relative;
+}
+.code-block::before {
+  content: 'pseudo-code'; position: absolute; top: 8px; right: 12px;
+  font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.code-block .kw { color: #ff7043; }
+.code-block .str { color: #ffde00; }
+.code-block .fn { color: #4fc3f7; }
+.code-block .cm { color: #6a7080; font-style: italic; }
+.code-block .num { color: #ab47bc; }
+
+/* ===== VECTOR DB TABLE ===== */
+.cmp-table-wrap { overflow-x: auto; margin: 2rem 0; border-radius: 14px; border: 1px solid var(--border); }
+.cmp-table { width: 100%; border-collapse: collapse; background: var(--bg-card); min-width: 700px; }
+.cmp-table th, .cmp-table td {
+  padding: 0.85rem 1rem; text-align: left;
+  border-bottom: 1px solid var(--border); font-size: 0.88rem;
+}
+.cmp-table th {
+  background: rgba(255,222,0,0.06); color: var(--yellow);
+  font-family: var(--display); font-weight: 700;
+  font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.cmp-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.cmp-table td:first-child { font-weight: 600; color: var(--text); }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 0.72rem; font-family: var(--mono); font-weight: 600;
+}
+.badge.green { background: rgba(102,187,106,0.15); color: var(--success); }
+.badge.yellow { background: rgba(255,222,0,0.15); color: var(--yellow); }
+.badge.red { background: rgba(239,83,80,0.15); color: var(--danger); }
+.badge.blue { background: rgba(79,195,247,0.15); color: var(--accent); }
+
+/* ===== USE-CASE GALLERY ===== */
+.uc-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.2rem; margin-top: 2rem;
+}
+.uc-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem 1.4rem;
+  transition: var(--transition); position: relative; overflow: hidden;
+}
+.uc-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,222,0,0.3);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5), var(--shadow-glow);
+}
+.uc-card .uc-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+.uc-card h4 { color: var(--jd-green-bright); margin-bottom: 0.4rem; font-size: 1.15rem; }
+.uc-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; }
+.uc-card .tags { display: flex; gap: 0.4rem; margin-top: 0.85rem; flex-wrap: wrap; }
+.uc-card .tag {
+  background: rgba(79,195,247,0.1); color: var(--accent);
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 0.7rem; font-family: var(--mono);
+}
+.uc-card .uc-real {
+  display: block; margin-top: 0.8rem; padding-top: 0.6rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.75rem; color: var(--text-dim);
+}
+.uc-card .uc-real strong { color: var(--yellow); }
+
+/* ===== WORKED EXAMPLE STEPS ===== */
+.steps { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0; }
+.step {
+  display: grid; grid-template-columns: 60px 1fr; gap: 1.2rem;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.2rem 1.3rem;
+  border-left: 3px solid var(--yellow);
+}
+.step .step-num {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--jd-green-bright), var(--yellow));
+  color: #0a0c10; font-weight: 900; font-family: var(--display);
+  font-size: 1.3rem; display: flex; align-items: center; justify-content: center;
+}
+.step h4 { color: var(--yellow); margin-bottom: 0.4rem; font-size: 1.05rem; }
+.step p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.55; }
+.step .step-detail {
+  background: #050608; border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.7rem 0.9rem; margin-top: 0.6rem;
+  font-family: var(--mono); font-size: 0.78rem; color: #e6e8ee; overflow-x: auto;
+}
+.step .step-detail .out { color: var(--success); }
+.step .step-detail .lbl { color: var(--text-dim); }
+
+/* ===== PITFALLS ===== */
+.pitfall-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem; margin: 2rem 0;
+}
+.pitfall {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-left: 3px solid var(--danger); border-radius: 12px;
+  padding: 1.2rem 1.3rem;
+}
+.pitfall h4 { color: var(--danger); font-size: 0.98rem; margin-bottom: 0.4rem; }
+.pitfall h4::before { content: '⚠ '; }
+.pitfall p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; }
+.pitfall .fix {
+  display: block; margin-top: 0.6rem; padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.78rem; color: var(--success);
+}
+.pitfall .fix strong { color: var(--success); }
+
+/* ===== FOOTER ===== */
+footer {
+  max-width: 1140px; margin: 4rem auto 2rem; padding: 2.5rem 3rem;
+  border-top: 1px solid var(--border); text-align: center;
+}
+footer p { color: var(--text-dim); font-size: 0.85rem; }
+footer a { color: var(--yellow); text-decoration: none; }
+
+/* ===== ANIMATIONS ===== */
+.fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== 14" LAPTOP (1366×768 / 1440×900) and smaller desktops ===== */
+@media (max-width: 1280px) {
+  nav { padding: 0 1rem; height: 58px; }
+  nav .brand { font-size: 0.85rem; }
+  nav .brand svg { width: 22px; height: 22px; }
+  nav .nav-links a { padding: 6px 9px; font-size: 0.72rem; }
+  .progress-bar { top: 58px; }
+
+  section { padding: 2rem 1.75rem; }
+  .section-divider { padding: 2.75rem 1.75rem 1.5rem; }
+  .section-divider .section-number { font-size: 4.5rem; }
+  .section-divider h2 { font-size: 2.6rem; }
+  .section-divider p { font-size: 1.05rem; }
+
+  .hero { padding: 4.5rem 1.75rem; min-height: 60vh; }
+  .hero .subtitle { font-size: 1.15rem; }
+  .session-stat { padding: 1.1rem 1.5rem; }
+  .session-stat .number { font-size: 2rem; }
+
+  h2 { font-size: 2.2rem; }
+  h3 { font-size: 1.3rem; }
+
+  footer { padding: 2rem 1.75rem; }
+
+  .pipeline-wrap { padding: 1.1rem; }
+  .pipeline-wrap svg { min-width: 680px; }
+  .cmp-table { min-width: 600px; }
+  .panel-grid { padding: 1.3rem; gap: 1.1rem; }
+}
+
+/* ===== TABLET / SMALL LAPTOP ===== */
+@media (max-width: 1024px) {
+  .section-divider .section-number { font-size: 3.8rem; }
+  .section-divider h2 { font-size: 2.2rem; }
+  .hero h1 { letter-spacing: -0.03em; }
+  .panel-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  nav { padding: 0 0.75rem; }
+  nav .nav-links { display: none; }
+  section, .section-divider, .hero, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  h2 { font-size: 1.9rem; }
+  .section-divider h2 { font-size: 2rem; }
+  .section-divider .section-number { font-size: 3.2rem; }
+  .session-info { flex-direction: column; }
+  .hero { padding-top: 4rem; padding-bottom: 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L1 9l4 1.5V18l7 4 7-4v-7.5L23 9 12 2zm0 2.3L19.5 9 12 12.7 4.5 9 12 4.3z"/></svg>
+    <span>Simple RAG — Visual Deep Dive</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#why">Why</a></li>
+    <li><a href="#pipeline">Pipeline</a></li>
+    <li><a href="#embed">Embeddings</a></li>
+    <li><a href="#chunk">Chunking</a></li>
+    <li><a href="#types">RAG Types</a></li>
+    <li><a href="#vdb">Vector DBs</a></li>
+    <li><a href="#rerank">Re-ranking</a></li>
+    <li><a href="#apps">Use Cases</a></li>
+    <li><a href="#example">Worked Example</a></li>
+    <li><a href="#pitfalls">Pitfalls</a></li>
+  </ul>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <h1>RAG<span class="h1-sub">(Zero to Hero)</span></h1>
+  <p class="subtitle">
+    Retrieval-Augmented Generation — visualized end-to-end. From tokens and embeddings,
+    through chunking and vector search, to the five flavors of Simple RAG that Ready to move prod
+    every day. A practitioner's tour of what each component does, why it matters, and where
+    things actually break.
+  </p>
+  <div class="session-info">
+    <div class="session-stat"><div class="number">8</div><div class="label">Pipeline Stages</div></div>
+    <div class="session-stat"><div class="number">5</div><div class="label">RAG Types</div></div>
+    <div class="session-stat"><div class="number">4</div><div class="label">Chunking Strategies</div></div>
+    <div class="session-stat"><div class="number">5+</div><div class="label">Vector DBs Compared</div></div>
+    <div class="session-stat"><div class="number">8+</div><div class="label">Real-World Apps</div></div>
+  </div>
+</header>
+
+<!-- ============================================================
+     SECTION 01 — WHY RAG?
+============================================================ -->
+<div class="section-divider fade-in" id="why">
+  <div class="section-number">01</div>
+  <h2>Why RAG exists</h2>
+  <p>An LLM on its own is a brilliant student who closed every textbook before the exam.
+  It speaks fluently — but only about the world it saw during training. RAG hands the student
+  the right page at the right moment.</p>
+</div>
+
+<section class="fade-in">
+  <h3>The four failure modes RAG was built to fix</h3>
+  <div class="fail-grid">
+    <div class="fail-q">
+      <div class="qnum">1</div>
+      <h5>Stale knowledge</h5>
+      <p>An LLM trained in 2023 can't answer "Who won yesterday's match?" — its world ends at the training cutoff.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">2</div>
+      <h5>Confident hallucination</h5>
+      <p>Asked about a topic outside its data, the model fabricates plausible-sounding but invented facts.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">3</div>
+      <h5>No private knowledge</h5>
+      <p>Your company's wiki, contracts, code repo, and customer history were never part of pre-training.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">4</div>
+      <h5>No citations</h5>
+      <p>Even when correct, the model can't point to a source — making it unusable for legal, medical, or regulated work.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:2rem;">LLM-only vs LLM + RAG — side by side</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">🧠</span>LLM alone (parametric memory only)</h4>
+      <ul>
+        <li>Answers from frozen training weights</li>
+        <li>No access to new or private data</li>
+        <li>Hallucinates when uncertain</li>
+        <li>Updating knowledge requires retraining or fine-tuning</li>
+        <li>Cannot cite specific sources</li>
+        <li>Cost of "knowing more" = cost of retraining</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔗</span>LLM + RAG (parametric + retrieval)</h4>
+      <ul>
+        <li>Pulls fresh, relevant chunks from a vector store at query time</li>
+        <li>Indexes any private corpus — wiki, PDFs, tickets, code</li>
+        <li>Grounded answers — model says <em>"I don't know"</em> when retrieval is empty</li>
+        <li>Updating knowledge = re-indexing a document (seconds)</li>
+        <li>Every answer carries its source citations</li>
+        <li>Cost of "knowing more" = cost of one embedding call</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">The Core Insight</div>
+    <div class="uc-title">RAG = Search + Generation, glued by embeddings</div>
+    <p>The LLM stays small and frozen. The knowledge sits in a searchable vector index. At query time
+    we <strong>retrieve the most relevant chunks</strong> and <strong>augment the prompt</strong> so
+    the LLM generates a grounded answer. That's it — and that simple pattern powers ChatGPT's
+    browsing mode, GitHub Copilot Chat, Notion AI, Perplexity, and every enterprise "chat with your docs" tool you've ever used.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 02 — THE SIMPLE RAG PIPELINE
+============================================================ -->
+<div class="section-divider fade-in" id="pipeline">
+  <div class="section-number">02</div>
+  <h2>The Simple RAG Pipeline</h2>
+  <p>Two flows live in every RAG system: an <strong>offline ingestion pipeline</strong> that turns
+  your documents into searchable vectors, and an <strong>online query pipeline</strong> that runs
+  per request. They meet at the vector store.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>End-to-end RAG flow — ingestion (top) meets query (bottom) at the Vector DB</h4>
+    <svg viewBox="0 0 1000 470" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+        </marker>
+        <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#44a340"/>
+        </marker>
+        <linearGradient id="vdbGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ab47bc"/>
+          <stop offset="100%" stop-color="#4fc3f7"/>
+        </linearGradient>
+      </defs>
+
+      <!-- ROW LABELS -->
+      <text x="20" y="40" class="svg-text" fill="#44a340" font-size="13">① INGESTION (offline)</text>
+      <text x="20" y="345" class="svg-text" fill="#ffde00" font-size="13">② QUERY (per request)</text>
+
+      <!-- TOP ROW: Document → Chunk → Embed → Store -->
+      <!-- Document -->
+      <rect x="30" y="60" width="140" height="80" rx="10" fill="#181c26" stroke="#44a340" stroke-width="1.5"/>
+      <text x="100" y="92" text-anchor="middle" class="svg-text">📄 Documents</text>
+      <text x="100" y="112" text-anchor="middle" class="svg-text-sm">PDFs, wiki, code,</text>
+      <text x="100" y="126" text-anchor="middle" class="svg-text-sm">tickets, contracts</text>
+
+      <!-- Chunk -->
+      <rect x="220" y="60" width="140" height="80" rx="10" fill="#181c26" stroke="#44a340" stroke-width="1.5"/>
+      <text x="290" y="92" text-anchor="middle" class="svg-text">✂ Chunk</text>
+      <text x="290" y="112" text-anchor="middle" class="svg-text-sm">Split into 200–800</text>
+      <text x="290" y="126" text-anchor="middle" class="svg-text-sm">token passages</text>
+
+      <!-- Embed -->
+      <rect x="410" y="60" width="140" height="80" rx="10" fill="#181c26" stroke="#44a340" stroke-width="1.5"/>
+      <text x="480" y="88" text-anchor="middle" class="svg-text">🧮 Embed</text>
+      <text x="480" y="108" text-anchor="middle" class="svg-text-sm">Sentence-BERT,</text>
+      <text x="480" y="122" text-anchor="middle" class="svg-text-sm">OpenAI ada-002,</text>
+      <text x="480" y="136" text-anchor="middle" class="svg-text-sm">→ 384-1536 dims</text>
+
+      <!-- Store (Vector DB) - bridges both rows -->
+      <rect x="610" y="60" width="180" height="80" rx="10" fill="url(#vdbGrad)" stroke="#fff" stroke-width="2" class="svg-pulse"/>
+      <text x="700" y="92" text-anchor="middle" class="svg-text" font-size="14">🗄 Vector DB</text>
+      <text x="700" y="112" text-anchor="middle" class="svg-text-sm" fill="#fff">Qdrant · Milvus ·</text>
+      <text x="700" y="126" text-anchor="middle" class="svg-text-sm" fill="#fff">Pinecone · Weaviate</text>
+
+      <!-- Top arrows -->
+      <line x1="170" y1="100" x2="220" y2="100" class="svg-edge-active" stroke="#44a340" marker-end="url(#arrG)"/>
+      <line x1="360" y1="100" x2="410" y2="100" class="svg-edge-active" stroke="#44a340" marker-end="url(#arrG)"/>
+      <line x1="550" y1="100" x2="610" y2="100" class="svg-edge-active" stroke="#44a340" marker-end="url(#arrG)"/>
+
+      <!-- Vector DB vertical connector to query row -->
+      <line x1="700" y1="140" x2="700" y2="240" stroke="#fff" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
+      <text x="715" y="195" class="svg-text-sm" fill="#c8ccd6">embeddings</text>
+
+      <!-- Stage numbers (top) -->
+      <circle cx="100" cy="170" r="11" fill="#ffde00"/><text x="100" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">1</text>
+      <circle cx="290" cy="170" r="11" fill="#ffde00"/><text x="290" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">2</text>
+      <circle cx="480" cy="170" r="11" fill="#ffde00"/><text x="480" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">3</text>
+      <circle cx="700" cy="170" r="11" fill="#ffde00"/><text x="700" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">4</text>
+
+      <!-- Divider -->
+      <line x1="0" y1="220" x2="1000" y2="220" stroke="#2a2f3e" stroke-width="1" stroke-dasharray="2 4"/>
+
+      <!-- BOTTOM ROW: User Query → Embed → Search → Augment → LLM → Answer -->
+      <!-- User Query -->
+      <rect x="30" y="260" width="130" height="75" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="95" y="288" text-anchor="middle" class="svg-text">👤 User Query</text>
+      <text x="95" y="308" text-anchor="middle" class="svg-text-sm" fill="#ffde00">"What organelle</text>
+      <text x="95" y="322" text-anchor="middle" class="svg-text-sm" fill="#ffde00">produces energy?"</text>
+
+      <!-- Embed query -->
+      <rect x="200" y="260" width="120" height="75" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="260" y="290" text-anchor="middle" class="svg-text">🧮 Embed Q</text>
+      <text x="260" y="310" text-anchor="middle" class="svg-text-sm">same model</text>
+      <text x="260" y="324" text-anchor="middle" class="svg-text-sm">as ingestion</text>
+
+      <!-- Search/Retrieve -->
+      <rect x="360" y="260" width="130" height="75" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="425" y="288" text-anchor="middle" class="svg-text">🔍 Top-K Search</text>
+      <text x="425" y="308" text-anchor="middle" class="svg-text-sm">cosine similarity</text>
+      <text x="425" y="322" text-anchor="middle" class="svg-text-sm">k=3..10 chunks</text>
+
+      <!-- Augment -->
+      <rect x="530" y="260" width="130" height="75" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="595" y="288" text-anchor="middle" class="svg-text">📝 Augment</text>
+      <text x="595" y="308" text-anchor="middle" class="svg-text-sm">chunks + query</text>
+      <text x="595" y="322" text-anchor="middle" class="svg-text-sm">→ prompt template</text>
+
+      <!-- LLM -->
+      <rect x="700" y="260" width="120" height="75" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="760" y="290" text-anchor="middle" class="svg-text">🤖 LLM</text>
+      <text x="760" y="310" text-anchor="middle" class="svg-text-sm">GPT-4, Claude,</text>
+      <text x="760" y="324" text-anchor="middle" class="svg-text-sm">Llama, Mistral</text>
+
+      <!-- Answer -->
+      <rect x="860" y="260" width="120" height="75" rx="10" fill="#181c26" stroke="#44a340" stroke-width="1.5"/>
+      <text x="920" y="290" text-anchor="middle" class="svg-text">✓ Answer</text>
+      <text x="920" y="310" text-anchor="middle" class="svg-text-sm" fill="#44a340">grounded +</text>
+      <text x="920" y="324" text-anchor="middle" class="svg-text-sm" fill="#44a340">cited</text>
+
+      <!-- Bottom arrows -->
+      <line x1="160" y1="297" x2="200" y2="297" class="svg-edge-active" marker-end="url(#arrY)"/>
+      <line x1="320" y1="297" x2="360" y2="297" class="svg-edge-active" marker-end="url(#arrY)"/>
+      <line x1="490" y1="297" x2="530" y2="297" class="svg-edge-active" marker-end="url(#arrY)"/>
+      <line x1="660" y1="297" x2="700" y2="297" class="svg-edge-active" marker-end="url(#arrY)"/>
+      <line x1="820" y1="297" x2="860" y2="297" class="svg-edge-active" marker-end="url(#arrY)"/>
+
+      <!-- Vector DB → Top-K Search retrieval line -->
+      <path d="M 700 140 Q 700 200 425 240 L 425 260" stroke="#ab47bc" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrY)" opacity="0.85"/>
+      <text x="540" y="218" class="svg-text-sm" fill="#ab47bc">retrieve matches</text>
+
+      <!-- Stage numbers (bottom) -->
+      <circle cx="95" cy="365" r="11" fill="#ffde00"/><text x="95" y="369" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">5</text>
+      <circle cx="260" cy="365" r="11" fill="#ffde00"/><text x="260" y="369" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">6</text>
+      <circle cx="425" cy="365" r="11" fill="#ffde00"/><text x="425" y="369" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">7</text>
+      <circle cx="595" cy="365" r="11" fill="#ffde00"/><text x="595" y="369" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">8</text>
+
+      <!-- Legend -->
+      <rect x="30" y="410" width="14" height="14" fill="#44a340"/>
+      <text x="50" y="422" class="svg-text-sm">Ingestion path (one-time, async)</text>
+      <rect x="280" y="410" width="14" height="14" fill="#ffde00"/>
+      <text x="300" y="422" class="svg-text-sm">Query path (every user request)</text>
+      <rect x="530" y="410" width="14" height="14" fill="#ab47bc"/>
+      <text x="550" y="422" class="svg-text-sm">Retrieval lookup (vector similarity)</text>
+    </svg>
+  </div>
+
+  <h3>Stage-by-stage breakdown</h3>
+  <div class="uc-grid">
+    <div class="uc-card">
+      <div class="uc-icon">📄</div>
+      <h4>1 · Load</h4>
+      <p>Pull source documents from S3, SharePoint, Confluence, Git. Strip boilerplate, preserve structure (headings, tables, code blocks).</p>
+      <span class="uc-real"><strong>Tools:</strong> LangChain loaders, LlamaParse, Unstructured.io, PyMuPDF</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">✂</div>
+      <h4>2 · Chunk</h4>
+      <p>Break long documents into passages small enough to embed (200–800 tokens) but large enough to carry meaning.</p>
+      <span class="uc-real"><strong>Why:</strong> embeddings have a ~512 token ceiling on most models</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🧮</div>
+      <h4>3 · Embed</h4>
+      <p>Convert each chunk into a dense vector (e.g. 384 or 1536 floats) that captures its semantic meaning.</p>
+      <span class="uc-real"><strong>Models:</strong> all-MiniLM-L6-v2, BGE-large, OpenAI text-embedding-3</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🗄</div>
+      <h4>4 · Store</h4>
+      <p>Persist vectors + original text in a vector DB with an ANN index (HNSW, IVF) for sub-100 ms search.</p>
+      <span class="uc-real"><strong>Tip:</strong> always store original text — embeddings aren't reversible</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🧮</div>
+      <h4>5–6 · Embed Query</h4>
+      <p>At query time, embed the user's question with the <em>same</em> model used for ingestion. Mismatched models = garbage results.</p>
+      <span class="uc-real"><strong>Latency budget:</strong> 20–80 ms for local models</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🔍</div>
+      <h4>7 · Retrieve top-K</h4>
+      <p>Find the K chunks whose vectors are closest to the query vector (cosine similarity or dot product).</p>
+      <span class="uc-real"><strong>Typical K:</strong> 3 (chat) — 20 (with reranker)</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">📝</div>
+      <h4>8a · Augment</h4>
+      <p>Glue the retrieved chunks into a prompt template:<br><code>Context: {chunks}\nQuestion: {q}</code></p>
+      <span class="uc-real"><strong>Watch:</strong> total prompt must fit the LLM context window</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🤖</div>
+      <h4>8b · Generate</h4>
+      <p>The LLM reads the context and writes an answer grounded in those chunks — with citations.</p>
+      <span class="uc-real"><strong>Prompt rule:</strong> instruct "answer only from context, else say I don't know"</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 03 — EMBEDDINGS & TOKENIZATION
+============================================================ -->
+<div class="section-divider fade-in" id="embed">
+  <div class="section-number">03</div>
+  <h2>Embeddings &amp; Tokenization</h2>
+  <p>Before any model can "understand" text, that text must become numbers. Tokenization breaks
+  words into pieces; embeddings turn those pieces into vectors in a geometric space where
+  meaning becomes distance.</p>
+</div>
+
+<section class="fade-in" data-tab-group="emb">
+  <div class="tabstrip c3" role="tablist">
+    <button class="tab-btn active" data-tab="emb-tok"><span class="tb-icon">🔤</span>Tokenization</button>
+    <button class="tab-btn" data-tab="emb-space"><span class="tb-icon">🌌</span>Embedding Space</button>
+    <button class="tab-btn" data-tab="emb-models"><span class="tb-icon">📈</span>Model Evolution</button>
+  </div>
+
+  <!-- TOKENIZATION PANEL -->
+  <div class="tab-panel active" data-panel="emb-tok">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrCY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+            </marker>
+          </defs>
+          <!-- Original word -->
+          <rect x="140" y="20" width="200" height="50" rx="8" fill="#181c26" stroke="#44a340" stroke-width="2"/>
+          <text x="240" y="42" text-anchor="middle" class="svg-text" font-size="16">Mitochondria</text>
+          <text x="240" y="60" text-anchor="middle" class="svg-text-sm">Original word</text>
+
+          <!-- Arrow down -->
+          <line x1="240" y1="80" x2="240" y2="110" class="svg-edge-active" marker-end="url(#arrCY)"/>
+          <text x="280" y="100" class="svg-text-sm" fill="#ffde00">Subword tokenizer</text>
+
+          <!-- Tokens -->
+          <rect x="30" y="120" width="90" height="44" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="75" y="148" text-anchor="middle" class="svg-text" font-size="13">mit</text>
+          <rect x="135" y="120" width="90" height="44" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="180" y="148" text-anchor="middle" class="svg-text" font-size="13">##och</text>
+          <rect x="240" y="120" width="100" height="44" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="290" y="148" text-anchor="middle" class="svg-text" font-size="13">##ond</text>
+          <rect x="355" y="120" width="95" height="44" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="402" y="148" text-anchor="middle" class="svg-text" font-size="13">##ria</text>
+
+          <!-- Token IDs -->
+          <text x="75" y="184" text-anchor="middle" class="svg-text-sm" fill="#ab47bc">id: 5247</text>
+          <text x="180" y="184" text-anchor="middle" class="svg-text-sm" fill="#ab47bc">id: 8901</text>
+          <text x="290" y="184" text-anchor="middle" class="svg-text-sm" fill="#ab47bc">id: 3122</text>
+          <text x="402" y="184" text-anchor="middle" class="svg-text-sm" fill="#ab47bc">id: 6789</text>
+
+          <!-- Vectors -->
+          <line x1="75" y1="200" x2="75" y2="225" stroke="#5a6175" stroke-width="1.2"/>
+          <line x1="180" y1="200" x2="180" y2="225" stroke="#5a6175" stroke-width="1.2"/>
+          <line x1="290" y1="200" x2="290" y2="225" stroke="#5a6175" stroke-width="1.2"/>
+          <line x1="402" y1="200" x2="402" y2="225" stroke="#5a6175" stroke-width="1.2"/>
+
+          <rect x="30" y="230" width="420" height="40" rx="6" fill="#050608" stroke="#4fc3f7"/>
+          <text x="240" y="248" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7" font-size="11">[0.12, -0.45, 0.81, ..., 0.03]  ← per-token vectors (~768 dims each)</text>
+          <text x="240" y="262" text-anchor="middle" class="svg-text-sm" font-size="10">aggregated via mean-pool → single sentence embedding</text>
+
+          <!-- Final -->
+          <line x1="240" y1="275" x2="240" y2="295" class="svg-edge-active" marker-end="url(#arrCY)"/>
+          <rect x="120" y="297" width="240" height="20" rx="4" fill="#ffde00"/>
+          <text x="240" y="311" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="700" fill="#0a0c10">[0.23, -0.18, 0.67, ..., 0.41]</text>
+        </svg>
+        <div class="panel-caption">"Mitochondria" → 4 BERT subword tokens → token IDs → vectors → pooled sentence embedding</div>
+      </div>
+      <div class="panel-info">
+        <h3>Tokens are the atoms</h3>
+        <p class="tagline">"BPE", "WordPiece" and "SentencePiece" all do the same job: shatter text into reusable pieces.</p>
+        <ul class="bullets">
+          <li><strong>Why subwords?</strong> A 30k vocabulary covers any English word. Rare words like <em>"Mitochondria"</em> decompose into known pieces.</li>
+          <li><strong>The <code>##</code> prefix</strong> in BERT marks "this token continues the previous one" — preserves the word boundary.</li>
+          <li><strong>~4 chars ≈ 1 token</strong> for English. Code, emoji, and CJK are denser.</li>
+          <li><strong>Same tokenizer everywhere:</strong> the tokenizer used to embed your docs <em>must</em> match the one used at query time.</li>
+        </ul>
+        <div class="usecase">
+          <div class="uc-label">Real impact</div>
+          <div class="uc-title">Token count = cost &amp; latency</div>
+          <p>GPT-4 charges per token. A 500-page PDF that tokenizes to 250 k tokens costs ~$2.50 just to embed once with OpenAI's ada-002. Pick a local model (all-MiniLM) for high-volume ingestion.</p>
+        </div>
+<pre class="code-block"><span class="cm"># Tokenize and embed with sentence-transformers</span>
+<span class="kw">from</span> sentence_transformers <span class="kw">import</span> SentenceTransformer
+
+model = SentenceTransformer(<span class="str">"all-MiniLM-L6-v2"</span>)
+tokens = model.tokenizer.tokenize(<span class="str">"Mitochondria produce energy"</span>)
+<span class="cm"># → ['mit', '##och', '##ond', '##ria', 'produce', 'energy']</span>
+
+vector = model.<span class="fn">encode</span>(<span class="str">"Mitochondria produce energy"</span>)
+<span class="fn">print</span>(vector.shape)  <span class="cm"># → (384,)  one 384-dim vector per sentence</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMBEDDING SPACE PANEL -->
+  <div class="tab-panel" data-panel="emb-space">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+          <!-- Axes -->
+          <line x1="40" y1="320" x2="450" y2="320" stroke="#5a6175" stroke-width="1.2"/>
+          <line x1="40" y1="320" x2="40" y2="30" stroke="#5a6175" stroke-width="1.2"/>
+          <text x="455" y="324" class="svg-text-sm" font-size="10">dim 1</text>
+          <text x="20" y="25" class="svg-text-sm" font-size="10">dim 2</text>
+
+          <!-- Cluster 1: animals -->
+          <circle cx="110" cy="240" r="9" fill="#44a340" class="svg-pulse"/>
+          <text x="125" y="244" class="svg-text" font-size="12">dog</text>
+          <circle cx="135" cy="225" r="9" fill="#44a340"/>
+          <text x="150" y="229" class="svg-text" font-size="12">canine</text>
+          <circle cx="100" cy="220" r="9" fill="#44a340"/>
+          <text x="60" y="215" class="svg-text" font-size="12">puppy</text>
+          <circle cx="160" cy="245" r="9" fill="#66bb6a"/>
+          <text x="175" y="249" class="svg-text" font-size="12">wolf</text>
+
+          <!-- distance arrows -->
+          <line x1="110" y1="240" x2="135" y2="225" stroke="#44a340" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="155" y="210" class="svg-text-sm" fill="#44a340" font-size="10">d = 0.12 ✓ close</text>
+
+          <!-- Cluster 2: vehicles -->
+          <circle cx="340" cy="100" r="9" fill="#4fc3f7"/>
+          <text x="355" y="104" class="svg-text" font-size="12">car</text>
+          <circle cx="365" cy="85" r="9" fill="#4fc3f7"/>
+          <text x="380" y="89" class="svg-text" font-size="12">vehicle</text>
+          <circle cx="320" cy="115" r="9" fill="#4fc3f7"/>
+          <text x="265" y="111" class="svg-text" font-size="12">truck</text>
+
+          <!-- distance from cluster1 to cluster2 -->
+          <line x1="135" y1="225" x2="340" y2="100" stroke="#ef5350" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="220" y="160" class="svg-text-sm" fill="#ef5350" font-size="10">d = 0.81 ✗ far</text>
+
+          <!-- Cluster 3: emotions -->
+          <circle cx="245" cy="285" r="9" fill="#ab47bc"/>
+          <text x="200" y="305" class="svg-text" font-size="12">happiness</text>
+          <circle cx="275" cy="270" r="9" fill="#ab47bc"/>
+          <text x="290" y="274" class="svg-text" font-size="12">joy</text>
+
+          <!-- Query marker -->
+          <circle cx="120" cy="232" r="14" fill="none" stroke="#ffde00" stroke-width="2" stroke-dasharray="3 2"/>
+          <text x="55" y="265" class="svg-text-sm" fill="#ffde00">query: "puppy"</text>
+
+          <!-- Title -->
+          <text x="240" y="20" text-anchor="middle" class="svg-text" fill="#ffde00" font-size="13">Semantic neighborhoods in vector space</text>
+        </svg>
+        <div class="panel-caption">Words with similar meaning cluster together. Distance = (1 − cosine similarity).</div>
+      </div>
+      <div class="panel-info">
+        <h3>Meaning becomes geometry</h3>
+        <p class="tagline">An embedding model maps text into a high-dim space where related concepts sit near each other.</p>
+        <ul class="bullets">
+          <li><strong>Cosine similarity</strong> — angle between vectors. 1.0 = identical, 0 = unrelated, −1 = opposite. Standard for normalized text embeddings.</li>
+          <li><strong>Dimensionality</strong> — 384 (MiniLM) → 768 (BERT) → 1536 (ada-002) → 3072 (text-embedding-3-large). More dims ≠ always better; it's about training data quality.</li>
+          <li><strong>The famous arithmetic:</strong> <code>king − man + woman ≈ queen</code> — early Word2Vec showed embeddings encode relationships, not just meaning.</li>
+          <li><strong>Search = nearest-neighbor:</strong> embed the query, find the K closest vectors in your store. ANN indexes (HNSW, IVF) make this O(log N).</li>
+        </ul>
+        <div class="usecase">
+          <div class="uc-label">Why this matters for RAG</div>
+          <div class="uc-title">Semantic recall beats keyword search</div>
+          <p>A query <em>"powerhouse of the cell"</em> retrieves a chunk that only says <em>"mitochondria generate ATP"</em> — no word overlap, but the vectors sit ~0.1 apart in embedding space.</p>
+        </div>
+<pre class="code-block"><span class="cm"># Cosine similarity in practice</span>
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+
+q  = model.<span class="fn">encode</span>(<span class="str">"powerhouse of the cell"</span>)
+d1 = model.<span class="fn">encode</span>(<span class="str">"Mitochondria generate ATP"</span>)
+d2 = model.<span class="fn">encode</span>(<span class="str">"The sun rises in the east"</span>)
+
+<span class="fn">cosine_similarity</span>([q], [d1])  <span class="cm"># → 0.89  highly related</span>
+<span class="fn">cosine_similarity</span>([q], [d2])  <span class="cm"># → 0.04  unrelated</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODEL EVOLUTION PANEL -->
+  <div class="tab-panel" data-panel="emb-models">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+          <!-- Timeline axis -->
+          <line x1="40" y1="300" x2="450" y2="300" stroke="#5a6175" stroke-width="1.4"/>
+          <polygon points="445,295 455,300 445,305" fill="#5a6175"/>
+          <text x="455" y="318" class="svg-text-sm" font-size="10">time</text>
+
+          <!-- Year ticks -->
+          <text x="60" y="320" class="svg-text-sm" font-size="10">2013</text>
+          <text x="155" y="320" class="svg-text-sm" font-size="10">2018</text>
+          <text x="250" y="320" class="svg-text-sm" font-size="10">2019</text>
+          <text x="345" y="320" class="svg-text-sm" font-size="10">2022</text>
+          <text x="420" y="320" class="svg-text-sm" font-size="10">2024</text>
+
+          <!-- Nodes -->
+          <circle cx="70" cy="240" r="22" fill="#181c26" stroke="#5a6175" stroke-width="1.5"/>
+          <text x="70" y="244" text-anchor="middle" class="svg-text" font-size="10">Word2Vec</text>
+          <text x="70" y="210" text-anchor="middle" class="svg-text-sm" font-size="9">word-level</text>
+          <text x="70" y="200" text-anchor="middle" class="svg-text-sm" font-size="9">300 dim</text>
+
+          <circle cx="165" cy="200" r="24" fill="#181c26" stroke="#4fc3f7" stroke-width="1.5"/>
+          <text x="165" y="204" text-anchor="middle" class="svg-text" font-size="10">BERT</text>
+          <text x="165" y="170" text-anchor="middle" class="svg-text-sm" font-size="9">contextual</text>
+          <text x="165" y="160" text-anchor="middle" class="svg-text-sm" font-size="9">768 dim</text>
+
+          <circle cx="260" cy="160" r="26" fill="#181c26" stroke="#44a340" stroke-width="2"/>
+          <text x="260" y="158" text-anchor="middle" class="svg-text" font-size="10">SBERT</text>
+          <text x="260" y="170" text-anchor="middle" class="svg-text-sm" font-size="9">sentence</text>
+          <text x="260" y="125" text-anchor="middle" class="svg-text-sm" font-size="9">384/768 dim</text>
+          <text x="260" y="115" text-anchor="middle" class="svg-text-sm" fill="#44a340" font-size="9">★ first true</text>
+          <text x="260" y="105" text-anchor="middle" class="svg-text-sm" fill="#44a340" font-size="9">RAG-ready</text>
+
+          <circle cx="355" cy="120" r="26" fill="#181c26" stroke="#ffde00" stroke-width="2"/>
+          <text x="355" y="118" text-anchor="middle" class="svg-text" font-size="10">ada-002</text>
+          <text x="355" y="130" text-anchor="middle" class="svg-text-sm" font-size="9">OpenAI</text>
+          <text x="355" y="85" text-anchor="middle" class="svg-text-sm" font-size="9">1536 dim</text>
+
+          <circle cx="430" cy="80" r="28" fill="#181c26" stroke="#ab47bc" stroke-width="2" class="svg-pulse"/>
+          <text x="430" y="78" text-anchor="middle" class="svg-text" font-size="10">embed-3</text>
+          <text x="430" y="90" text-anchor="middle" class="svg-text-sm" font-size="9">large</text>
+          <text x="430" y="48" text-anchor="middle" class="svg-text-sm" font-size="9">3072 dim</text>
+
+          <!-- Connecting curve -->
+          <path d="M 70 240 Q 100 220 165 200 Q 220 180 260 160 Q 320 140 355 120 Q 400 100 430 80"
+                stroke="#ffde00" stroke-width="1.4" fill="none" stroke-dasharray="3 3" opacity="0.6"/>
+
+          <!-- Title -->
+          <text x="240" y="25" text-anchor="middle" class="svg-text" fill="#ffde00" font-size="13">10 years of embedding model evolution</text>
+          <text x="240" y="40" text-anchor="middle" class="svg-text-sm" font-size="10">words → context → sentences → API-scale</text>
+        </svg>
+        <div class="panel-caption">Each generation captured richer context. Modern RAG defaults to sentence-level models trained with contrastive loss.</div>
+      </div>
+      <div class="panel-info">
+        <h3>Pick the right embedding model</h3>
+        <p class="tagline">Cost, latency, accuracy, and language coverage are the four knobs.</p>
+        <ul class="bullets">
+          <li><strong>all-MiniLM-L6-v2</strong> — 384 dim, 80 MB, runs on CPU. Free, fast, good enough for 80% of cases. Start here.</li>
+          <li><strong>BGE-large / E5-large</strong> — 1024 dim, top of the MTEB leaderboard. Best quality you can self-host.</li>
+          <li><strong>OpenAI text-embedding-3-small</strong> — $0.02 per 1M tokens. Production-ready, multilingual.</li>
+          <li><strong>Voyage / Cohere / Mistral-Embed</strong> — domain-tuned variants (code, legal, multilingual).</li>
+          <li><strong>Golden rule:</strong> never mix models. Re-embed the entire corpus if you change.</li>
+        </ul>
+<pre class="code-block"><span class="cm"># Compare models on YOUR data, not just on benchmarks</span>
+<span class="kw">from</span> sentence_transformers <span class="kw">import</span> SentenceTransformer
+
+candidates = [
+    <span class="str">"all-MiniLM-L6-v2"</span>,      <span class="cm"># 384d, fast, free</span>
+    <span class="str">"BAAI/bge-large-en-v1.5"</span>,  <span class="cm"># 1024d, SOTA open</span>
+    <span class="str">"intfloat/e5-large-v2"</span>,    <span class="cm"># 1024d, strong on QA</span>
+]
+<span class="kw">for</span> name <span class="kw">in</span> candidates:
+    m = SentenceTransformer(name)
+    score = <span class="fn">evaluate_recall_at_k</span>(m, your_test_set, k=<span class="num">5</span>)
+    <span class="fn">print</span>(name, score)</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 04 — CHUNKING STRATEGIES
+============================================================ -->
+<div class="section-divider fade-in" id="chunk">
+  <div class="section-number">04</div>
+  <h2>Chunking Strategies</h2>
+  <p>Chunking is the silent killer of RAG quality. Too small → no context. Too large → lossy embeddings.
+  Wrong boundaries → answers cut in half. Four strategies cover 95% of real systems.</p>
+</div>
+
+<section class="fade-in" data-tab-group="chunk">
+  <div class="tabstrip c4" role="tablist">
+    <button class="tab-btn active" data-tab="ch-fixed"><span class="tb-icon">📏</span>Fixed-size</button>
+    <button class="tab-btn" data-tab="ch-sem"><span class="tb-icon">🧩</span>Semantic</button>
+    <button class="tab-btn" data-tab="ch-hier"><span class="tb-icon">🌳</span>Hierarchical</button>
+    <button class="tab-btn" data-tab="ch-hyb"><span class="tb-icon">🔀</span>Hybrid (Sliding)</button>
+  </div>
+
+  <!-- FIXED -->
+  <div class="tab-panel active" data-panel="ch-fixed">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Cut every N tokens, ignoring meaning</text>
+          <!-- Original doc -->
+          <rect x="20" y="50" width="440" height="40" rx="4" fill="#181c26" stroke="#5a6175"/>
+          <text x="240" y="75" text-anchor="middle" class="svg-text-sm">Long document (3000 tokens)</text>
+          <!-- arrows -->
+          <line x1="240" y1="95" x2="240" y2="115" class="svg-edge"/>
+          <polygon points="235,113 240,123 245,113" fill="#5a6175"/>
+          <!-- chunks -->
+          <rect x="20" y="130" width="100" height="60" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="70" y="158" text-anchor="middle" class="svg-text" font-size="11">Chunk 1</text>
+          <text x="70" y="174" text-anchor="middle" class="svg-text-sm" font-size="10">tokens 0–500</text>
+
+          <rect x="130" y="130" width="100" height="60" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="180" y="158" text-anchor="middle" class="svg-text" font-size="11">Chunk 2</text>
+          <text x="180" y="174" text-anchor="middle" class="svg-text-sm" font-size="10">tokens 500–1000</text>
+
+          <rect x="240" y="130" width="100" height="60" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="290" y="158" text-anchor="middle" class="svg-text" font-size="11">Chunk 3</text>
+          <text x="290" y="174" text-anchor="middle" class="svg-text-sm" font-size="10">tokens 1000–1500</text>
+
+          <rect x="350" y="130" width="110" height="60" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="405" y="158" text-anchor="middle" class="svg-text" font-size="11">Chunk 4–6</text>
+          <text x="405" y="174" text-anchor="middle" class="svg-text-sm" font-size="10">tokens 1500–3000</text>
+
+          <!-- Issue indicator -->
+          <text x="240" y="215" text-anchor="middle" class="svg-text-sm" fill="#ef5350">⚠ A sentence may be split mid-clause →</text>
+          <text x="240" y="232" text-anchor="middle" class="svg-text-sm" fill="#ef5350">"…the engine was modified… || …in 1967 to allow…"</text>
+          <text x="240" y="260" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">Fix: overlap (e.g. 50-token overlap between adjacent chunks)</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Fixed-size chunking</h3>
+        <p class="tagline">"Just cut every 500 tokens" — the simplest possible strategy and the right starting point.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Use when</h5>
+            <ul>
+              <li>Prototyping a new RAG pipeline</li>
+              <li>Documents are uniform (logs, tweets)</li>
+              <li>You need predictable throughput</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Avoid when</h5>
+            <ul>
+              <li>Documents have clear structure (headings, tables)</li>
+              <li>Answers span paragraph boundaries</li>
+              <li>You need high recall on long Q&amp;A</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Real-world</div>
+          <div class="uc-title">Slack message archive search</div>
+          <p>Short uniform messages, no internal structure → 256-token fixed chunks with 32-token overlap works fine and runs at 50k docs/min.</p>
+        </div>
+<pre class="code-block"><span class="kw">def</span> <span class="fn">chunk_by_tokens</span>(text, size=<span class="num">500</span>, overlap=<span class="num">50</span>):
+    tokens = tokenizer.<span class="fn">tokenize</span>(text)
+    chunks = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, <span class="fn">len</span>(tokens), size - overlap):
+        chunk = tokens[i : i + size]
+        chunks.<span class="fn">append</span>(tokenizer.<span class="fn">decode</span>(chunk))
+    <span class="kw">return</span> chunks</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEMANTIC -->
+  <div class="tab-panel" data-panel="ch-sem">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Cut where meaning shifts</text>
+          <!-- Document with sentences -->
+          <rect x="20" y="45" width="440" height="200" rx="8" fill="#0a0c10" stroke="#5a6175"/>
+
+          <!-- Sentence 1-3 (topic A) -->
+          <rect x="35" y="60" width="410" height="22" rx="3" fill="rgba(68,163,64,0.15)" stroke="#44a340"/>
+          <text x="45" y="76" class="svg-text-sm" fill="#44a340">"The mitochondria is the powerhouse of the cell."</text>
+          <rect x="35" y="86" width="410" height="22" rx="3" fill="rgba(68,163,64,0.15)" stroke="#44a340"/>
+          <text x="45" y="102" class="svg-text-sm" fill="#44a340">"It produces ATP through oxidative phosphorylation."</text>
+          <rect x="35" y="112" width="410" height="22" rx="3" fill="rgba(68,163,64,0.15)" stroke="#44a340"/>
+          <text x="45" y="128" class="svg-text-sm" fill="#44a340">"Cells with high energy needs have more mitochondria."</text>
+
+          <!-- Semantic break -->
+          <line x1="35" y1="143" x2="445" y2="143" stroke="#ffde00" stroke-width="2" stroke-dasharray="4 3"/>
+          <text x="240" y="156" text-anchor="middle" class="svg-text-sm" fill="#ffde00">⟷ similarity drops &lt; 0.5 → split here</text>
+
+          <!-- Sentence 4-5 (topic B) -->
+          <rect x="35" y="165" width="410" height="22" rx="3" fill="rgba(79,195,247,0.15)" stroke="#4fc3f7"/>
+          <text x="45" y="181" class="svg-text-sm" fill="#4fc3f7">"The nucleus stores DNA in chromosomes."</text>
+          <rect x="35" y="191" width="410" height="22" rx="3" fill="rgba(79,195,247,0.15)" stroke="#4fc3f7"/>
+          <text x="45" y="207" class="svg-text-sm" fill="#4fc3f7">"It controls gene expression in the cell."</text>
+          <rect x="35" y="217" width="410" height="22" rx="3" fill="rgba(79,195,247,0.15)" stroke="#4fc3f7"/>
+          <text x="45" y="233" class="svg-text-sm" fill="#4fc3f7">"DNA is replicated during cell division."</text>
+
+          <!-- Output chunks legend -->
+          <rect x="20" y="260" width="200" height="28" rx="6" fill="rgba(68,163,64,0.12)" stroke="#44a340"/>
+          <text x="120" y="278" text-anchor="middle" class="svg-text-sm" fill="#44a340">→ Chunk 1: Energy (mito)</text>
+          <rect x="260" y="260" width="200" height="28" rx="6" fill="rgba(79,195,247,0.12)" stroke="#4fc3f7"/>
+          <text x="360" y="278" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">→ Chunk 2: Genetics (nucleus)</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Semantic chunking</h3>
+        <p class="tagline">Embed each sentence, drop a boundary wherever similarity collapses.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Use when</h5>
+            <ul>
+              <li>Each chunk needs to be coherent</li>
+              <li>Topic shifts are frequent</li>
+              <li>Quality &gt; ingestion speed</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Avoid when</h5>
+            <ul>
+              <li>You're ingesting millions of docs (slow)</li>
+              <li>Documents are short (&lt; 1000 tokens)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Real-world</div>
+          <div class="uc-title">Customer support knowledge base</div>
+          <p>Long articles cover multiple problems. Semantic chunking keeps each "problem + solution" pair intact in one chunk → retrieval lands on a complete answer, not a fragment.</p>
+        </div>
+<pre class="code-block"><span class="kw">def</span> <span class="fn">semantic_chunk</span>(sentences, threshold=<span class="num">0.5</span>):
+    embs = model.<span class="fn">encode</span>(sentences)
+    chunks, cur = [], [sentences[<span class="num">0</span>]]
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="fn">len</span>(sentences)):
+        sim = <span class="fn">cosine</span>(embs[i-<span class="num">1</span>], embs[i])
+        <span class="kw">if</span> sim &lt; threshold:           <span class="cm"># topic shift detected</span>
+            chunks.<span class="fn">append</span>(<span class="str">" "</span>.<span class="fn">join</span>(cur)); cur = []
+        cur.<span class="fn">append</span>(sentences[i])
+    chunks.<span class="fn">append</span>(<span class="str">" "</span>.<span class="fn">join</span>(cur))
+    <span class="kw">return</span> chunks</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIERARCHICAL -->
+  <div class="tab-panel" data-panel="ch-hier">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Multi-level: document → section → paragraph</text>
+
+          <!-- Level 1: doc -->
+          <rect x="160" y="40" width="160" height="40" rx="6" fill="#181c26" stroke="#44a340" stroke-width="2"/>
+          <text x="240" y="64" text-anchor="middle" class="svg-text" font-size="12">📕 Whole Document Summary</text>
+
+          <!-- arrows down -->
+          <line x1="200" y1="80" x2="80" y2="120" stroke="#5a6175"/>
+          <line x1="240" y1="80" x2="240" y2="120" stroke="#5a6175"/>
+          <line x1="280" y1="80" x2="400" y2="120" stroke="#5a6175"/>
+
+          <!-- Level 2: sections -->
+          <rect x="20" y="125" width="120" height="40" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="80" y="148" text-anchor="middle" class="svg-text" font-size="11">§ Chapter 1</text>
+          <rect x="180" y="125" width="120" height="40" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="240" y="148" text-anchor="middle" class="svg-text" font-size="11">§ Chapter 2</text>
+          <rect x="340" y="125" width="120" height="40" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="400" y="148" text-anchor="middle" class="svg-text" font-size="11">§ Chapter 3</text>
+
+          <!-- arrows -->
+          <line x1="240" y1="165" x2="180" y2="200" stroke="#5a6175"/>
+          <line x1="240" y1="165" x2="240" y2="200" stroke="#5a6175"/>
+          <line x1="240" y1="165" x2="300" y2="200" stroke="#5a6175"/>
+
+          <!-- Level 3: paragraphs -->
+          <rect x="155" y="205" width="55" height="32" rx="4" fill="#181c26" stroke="#ffde00"/>
+          <text x="182" y="225" text-anchor="middle" class="svg-text" font-size="10">¶ a</text>
+          <rect x="215" y="205" width="55" height="32" rx="4" fill="#181c26" stroke="#ffde00"/>
+          <text x="242" y="225" text-anchor="middle" class="svg-text" font-size="10">¶ b</text>
+          <rect x="275" y="205" width="55" height="32" rx="4" fill="#181c26" stroke="#ffde00"/>
+          <text x="302" y="225" text-anchor="middle" class="svg-text" font-size="10">¶ c</text>
+
+          <!-- Query flow -->
+          <text x="20" y="270" class="svg-text-sm" fill="#ffde00">Query → match section summary first</text>
+          <text x="20" y="288" class="svg-text-sm" fill="#ffde00">→ then drill down to paragraphs within that section</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Hierarchical chunking</h3>
+        <p class="tagline">Store summaries at every level — retrieve coarse-to-fine for huge documents.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Use when</h5>
+            <ul>
+              <li>Documents are 100+ pages (manuals, books, contracts)</li>
+              <li>Section structure is meaningful</li>
+              <li>You want explainable retrieval ("from Ch 3 §2")</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Avoid when</h5>
+            <ul>
+              <li>Short flat documents</li>
+              <li>Storage cost is constrained (3× more vectors)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Real-world</div>
+          <div class="uc-title">Aircraft maintenance manuals</div>
+          <p>A Boeing 787 maintenance manual is ~10,000 pages. Hierarchical chunking matches a query to the right chapter summary first, then surfaces 3-4 procedure paragraphs — vs scanning 50k flat chunks.</p>
+        </div>
+<pre class="code-block"><span class="kw">def</span> <span class="fn">hierarchical_chunk</span>(doc):
+    <span class="kw">return</span> {
+        <span class="str">"doc_summary"</span>: <span class="fn">summarize</span>(doc),
+        <span class="str">"sections"</span>: [
+            {<span class="str">"summary"</span>: <span class="fn">summarize</span>(sec),
+             <span class="str">"paragraphs"</span>: sec.<span class="fn">split_paragraphs</span>()}
+            <span class="kw">for</span> sec <span class="kw">in</span> doc.<span class="fn">sections</span>()
+        ]
+    }
+<span class="cm"># Retrieval: first hit on doc_summary → then sections → then paragraphs</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- HYBRID -->
+  <div class="tab-panel" data-panel="ch-hyb">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Sliding window with semantic snap</text>
+
+          <!-- Document strip -->
+          <rect x="20" y="50" width="440" height="32" rx="4" fill="#181c26" stroke="#5a6175"/>
+          <text x="240" y="70" text-anchor="middle" class="svg-text-sm">…sentence 1 | sentence 2 | sentence 3 | sentence 4 | sentence 5 | sentence 6…</text>
+
+          <!-- Window 1 -->
+          <rect x="25" y="100" width="200" height="34" rx="4" fill="rgba(255,222,0,0.15)" stroke="#ffde00"/>
+          <text x="125" y="121" text-anchor="middle" class="svg-text-sm" fill="#ffde00">Window 1: sentences 1–3</text>
+
+          <!-- Window 2 (overlap) -->
+          <rect x="135" y="140" width="200" height="34" rx="4" fill="rgba(79,195,247,0.15)" stroke="#4fc3f7"/>
+          <text x="235" y="161" text-anchor="middle" class="svg-text-sm" fill="#4fc3f7">Window 2: sentences 2–4 (overlap)</text>
+
+          <!-- Window 3 -->
+          <rect x="245" y="180" width="200" height="34" rx="4" fill="rgba(171,71,188,0.15)" stroke="#ab47bc"/>
+          <text x="345" y="201" text-anchor="middle" class="svg-text-sm" fill="#ab47bc">Window 3: sentences 3–5 (overlap)</text>
+
+          <!-- Note -->
+          <text x="240" y="245" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ Overlap preserves context across chunk boundaries</text>
+          <text x="240" y="262" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ Snap boundaries to sentence breaks (no mid-word cuts)</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Hybrid (sliding-window) chunking</h3>
+        <p class="tagline">The pragmatic default: fixed-size <em>windows</em> that slide with overlap, snapping to natural breaks.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Use when</h5>
+            <ul>
+              <li>You want one strategy that "just works"</li>
+              <li>Answers often live on chunk boundaries</li>
+              <li>You're not sure → start here</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Avoid when</h5>
+            <ul>
+              <li>Storage is critical (overlap = ~20% bloat)</li>
+              <li>You already have clean structure (use hierarchical)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Real-world</div>
+          <div class="uc-title">GitHub Copilot Chat over your repo</div>
+          <p>Code is chunked into ~800-token sliding windows snapped to function boundaries with 100-token overlap. A query about a helper that's used 200 lines away from where it's defined still retrieves both.</p>
+        </div>
+<pre class="code-block"><span class="kw">def</span> <span class="fn">hybrid_chunk</span>(text, size=<span class="num">500</span>, overlap=<span class="num">100</span>):
+    sentences = <span class="fn">split_sentences</span>(text)
+    chunks, cur, count = [], [], <span class="num">0</span>
+    <span class="kw">for</span> s <span class="kw">in</span> sentences:
+        t = <span class="fn">len</span>(<span class="fn">tokenize</span>(s))
+        <span class="kw">if</span> count + t &gt; size:
+            chunks.<span class="fn">append</span>(<span class="str">" "</span>.<span class="fn">join</span>(cur))
+            cur = cur[-<span class="fn">overlap_sentences</span>(cur, overlap):]   <span class="cm"># keep tail</span>
+            count = <span class="fn">sum</span>(<span class="fn">len</span>(<span class="fn">tokenize</span>(x)) <span class="kw">for</span> x <span class="kw">in</span> cur)
+        cur.<span class="fn">append</span>(s); count += t
+    chunks.<span class="fn">append</span>(<span class="str">" "</span>.<span class="fn">join</span>(cur))
+    <span class="kw">return</span> chunks</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 05 — TYPES OF SIMPLE RAG  (the centerpiece)
+============================================================ -->
+<div class="section-divider fade-in" id="types">
+  <div class="section-number">05</div>
+  <h2>Five Types of Simple RAG</h2>
+  <p>Once you understand the base pipeline, "Simple RAG" splits into five flavors. Each keeps the
+  vanilla retrieve-then-generate spine but tweaks one component — and that one tweak changes
+  the use-case fit dramatically.</p>
+</div>
+
+<section class="fade-in" data-tab-group="types">
+  <div class="tabstrip c5" role="tablist">
+    <button class="tab-btn active" data-tab="t-naive"><span class="tb-icon">🟢</span>Naive (Vector-only)</button>
+    <button class="tab-btn" data-tab="t-hybrid"><span class="tb-icon">⚖</span>Hybrid (BM25+Vec)</button>
+    <button class="tab-btn" data-tab="t-hier"><span class="tb-icon">🌳</span>Hierarchical</button>
+    <button class="tab-btn" data-tab="t-hyde"><span class="tb-icon">💡</span>HyDE</button>
+    <button class="tab-btn" data-tab="t-ref"><span class="tb-icon">🪶</span>Reference-based</button>
+  </div>
+
+  <!-- NAIVE -->
+  <div class="tab-panel active" data-panel="t-naive">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrN" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+            </marker>
+          </defs>
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">One index, one search, one LLM call</text>
+
+          <rect x="20" y="55" width="100" height="50" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="70" y="85" text-anchor="middle" class="svg-text" font-size="12">Query</text>
+          <line x1="120" y1="80" x2="170" y2="80" class="svg-edge-active" marker-end="url(#arrN)"/>
+
+          <rect x="170" y="55" width="120" height="50" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="230" y="78" text-anchor="middle" class="svg-text" font-size="12">Embed</text>
+          <text x="230" y="95" text-anchor="middle" class="svg-text-sm" font-size="10">384-d vector</text>
+          <line x1="290" y1="80" x2="340" y2="80" class="svg-edge-active" marker-end="url(#arrN)"/>
+
+          <rect x="340" y="55" width="120" height="50" rx="6" fill="#181c26" stroke="#ab47bc" class="svg-pulse"/>
+          <text x="400" y="78" text-anchor="middle" class="svg-text" font-size="12">Vector Search</text>
+          <text x="400" y="95" text-anchor="middle" class="svg-text-sm" font-size="10">cosine, top-K</text>
+
+          <line x1="400" y1="105" x2="400" y2="135" class="svg-edge-active" marker-end="url(#arrN)"/>
+
+          <rect x="320" y="140" width="140" height="50" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="390" y="163" text-anchor="middle" class="svg-text" font-size="12">Top-K chunks</text>
+          <text x="390" y="180" text-anchor="middle" class="svg-text-sm" font-size="10">K = 3..5 passages</text>
+
+          <line x1="320" y1="165" x2="240" y2="165" class="svg-edge-active" marker-end="url(#arrN)"/>
+
+          <rect x="100" y="140" width="140" height="50" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="170" y="163" text-anchor="middle" class="svg-text" font-size="12">Augmented Prompt</text>
+          <text x="170" y="180" text-anchor="middle" class="svg-text-sm" font-size="10">"context + question"</text>
+
+          <line x1="170" y1="190" x2="170" y2="225" class="svg-edge-active" marker-end="url(#arrN)"/>
+
+          <rect x="100" y="225" width="140" height="40" rx="6" fill="#ffde00"/>
+          <text x="170" y="250" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="700" fill="#0a0c10">🤖 LLM → Answer</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Naive (Vector-only) RAG</h3>
+        <p class="tagline">The textbook flavor. Embed everything, semantic search, stuff results into prompt. Done.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Conceptual / paraphrased queries</li>
+              <li>FAQs, chatbots, doc Q&amp;A</li>
+              <li>Small-to-mid corpora (&lt; 1M chunks)</li>
+              <li>"Just get me started" demos</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Exact-term queries (product SKUs, error codes)</li>
+              <li>Acronym / proper-noun lookups</li>
+              <li>Queries that share no vocabulary with the answer</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Workspace-wide question answering (Notion-class)</div>
+          <p>Every page in the workspace is embedded into a vector index once. Ask <em>"How do we handle PTO requests?"</em> and the HR-handbook section surfaces even though the page actually talks about a <em>"vacation time approval workflow"</em> — that vocabulary-bridging behavior is exactly what semantic search buys you.</p>
+        </div>
+<pre class="code-block"><span class="cm"># Naive RAG — the 15-line version</span>
+chunks = <span class="fn">load_and_chunk</span>(<span class="str">"docs/"</span>)
+vectors = model.<span class="fn">encode</span>(chunks)
+index.<span class="fn">add</span>(vectors, chunks)
+
+<span class="kw">def</span> <span class="fn">answer</span>(query):
+    qv = model.<span class="fn">encode</span>(query)
+    top_k = index.<span class="fn">search</span>(qv, k=<span class="num">5</span>)
+    context = <span class="str">"\n"</span>.<span class="fn">join</span>(c.text <span class="kw">for</span> c <span class="kw">in</span> top_k)
+    <span class="kw">return</span> llm(<span class="fn">prompt</span>(query, context))</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- HYBRID -->
+  <div class="tab-panel" data-panel="t-hybrid">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrH" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+            </marker>
+          </defs>
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Two retrievers in parallel, fused at the end</text>
+
+          <rect x="180" y="45" width="120" height="40" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="240" y="69" text-anchor="middle" class="svg-text" font-size="12">User Query</text>
+
+          <!-- Branch -->
+          <line x1="240" y1="85" x2="100" y2="120" stroke="#5a6175" stroke-width="1.4"/>
+          <line x1="240" y1="85" x2="380" y2="120" stroke="#5a6175" stroke-width="1.4"/>
+
+          <!-- BM25 branch -->
+          <rect x="20" y="125" width="160" height="50" rx="6" fill="#181c26" stroke="#ff7043"/>
+          <text x="100" y="148" text-anchor="middle" class="svg-text" font-size="12">🔤 BM25 / Keyword</text>
+          <text x="100" y="165" text-anchor="middle" class="svg-text-sm" font-size="10">exact term match, TF-IDF</text>
+
+          <!-- Vector branch -->
+          <rect x="300" y="125" width="160" height="50" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="380" y="148" text-anchor="middle" class="svg-text" font-size="12">🧮 Vector / Dense</text>
+          <text x="380" y="165" text-anchor="middle" class="svg-text-sm" font-size="10">semantic similarity</text>
+
+          <!-- Down to fusion -->
+          <line x1="100" y1="175" x2="200" y2="210" stroke="#ff7043" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrH)"/>
+          <line x1="380" y1="175" x2="280" y2="210" stroke="#4fc3f7" stroke-width="1.4" stroke-dasharray="3 2" marker-end="url(#arrH)"/>
+
+          <!-- RRF fusion -->
+          <rect x="160" y="215" width="160" height="40" rx="6" fill="#ffde00"/>
+          <text x="240" y="240" text-anchor="middle" font-family="Space Grotesk" font-size="12" font-weight="700" fill="#0a0c10">⚖ RRF Fusion → Top-K</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Hybrid RAG (BM25 + Vector)</h3>
+        <p class="tagline">Combine keyword precision with semantic recall. Best of both worlds, fused by Reciprocal Rank Fusion.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Code search (function names, identifiers)</li>
+              <li>Legal &amp; medical (exact terms matter)</li>
+              <li>Product catalogs (SKUs, model numbers)</li>
+              <li>Acronym-heavy domains</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Pure conversational chat (vector alone is enough)</li>
+              <li>Resource-constrained envs (2 indexes = 2× memory)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Sourcegraph Cody — code search across millions of repos</div>
+          <p>A query <em>"undefined behavior in <code>memcpy</code>"</em> needs both: BM25 to surface <em>every</em> file mentioning <code>memcpy</code>, and vector search to also find related concepts like <em>"unaligned pointer copy"</em>. Hybrid lifts recall by 15-30% on technical queries.</p>
+        </div>
+<pre class="code-block"><span class="cm"># Reciprocal Rank Fusion (RRF) — the standard merge</span>
+<span class="kw">def</span> <span class="fn">rrf</span>(bm25_hits, vec_hits, k=<span class="num">60</span>):
+    scores = {}
+    <span class="kw">for</span> rank, doc <span class="kw">in</span> <span class="fn">enumerate</span>(bm25_hits):
+        scores[doc.id] = scores.<span class="fn">get</span>(doc.id, <span class="num">0</span>) + <span class="num">1</span> / (k + rank)
+    <span class="kw">for</span> rank, doc <span class="kw">in</span> <span class="fn">enumerate</span>(vec_hits):
+        scores[doc.id] = scores.<span class="fn">get</span>(doc.id, <span class="num">0</span>) + <span class="num">1</span> / (k + rank)
+    <span class="kw">return</span> <span class="fn">sorted</span>(scores.<span class="fn">items</span>(), key=<span class="kw">lambda</span> x: -x[<span class="num">1</span>])
+
+<span class="cm"># OpenSearch supports it out of the box via hybrid query DSL</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- HIERARCHICAL RAG -->
+  <div class="tab-panel" data-panel="t-hier">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrHi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+            </marker>
+          </defs>
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Coarse → fine retrieval</text>
+
+          <!-- Stage 1 -->
+          <rect x="20" y="50" width="130" height="44" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="85" y="74" text-anchor="middle" class="svg-text" font-size="12">Query</text>
+          <line x1="150" y1="72" x2="190" y2="72" class="svg-edge-active" marker-end="url(#arrHi)"/>
+
+          <!-- Stage 2: doc level -->
+          <rect x="190" y="50" width="140" height="44" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="260" y="72" text-anchor="middle" class="svg-text" font-size="11">Search DOC summaries</text>
+          <text x="260" y="86" text-anchor="middle" class="svg-text-sm" font-size="9">narrow 1000 docs → 3 docs</text>
+          <line x1="330" y1="72" x2="370" y2="72" class="svg-edge-active" marker-end="url(#arrHi)"/>
+
+          <!-- Stage 3: section level -->
+          <rect x="370" y="50" width="100" height="44" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="420" y="68" text-anchor="middle" class="svg-text" font-size="10">Search SECTIONS</text>
+          <text x="420" y="84" text-anchor="middle" class="svg-text-sm" font-size="9">3 docs → 5 sections</text>
+
+          <!-- arrow down -->
+          <line x1="420" y1="94" x2="420" y2="130" class="svg-edge-active" marker-end="url(#arrHi)"/>
+
+          <!-- Stage 4: paragraph level -->
+          <rect x="305" y="130" width="170" height="50" rx="6" fill="#181c26" stroke="#ab47bc" class="svg-pulse"/>
+          <text x="390" y="152" text-anchor="middle" class="svg-text" font-size="11">Search PARAGRAPHS</text>
+          <text x="390" y="168" text-anchor="middle" class="svg-text-sm" font-size="10">5 sections → top 3 paragraphs</text>
+
+          <line x1="305" y1="155" x2="250" y2="155" class="svg-edge-active" marker-end="url(#arrHi)"/>
+
+          <rect x="80" y="130" width="170" height="50" rx="6" fill="#ffde00"/>
+          <text x="165" y="160" text-anchor="middle" font-family="Space Grotesk" font-size="12" font-weight="700" fill="#0a0c10">🤖 LLM → Answer + citation</text>
+
+          <text x="240" y="225" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ Cuts search space at every level — works for 100k+ page corpora</text>
+          <text x="240" y="245" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ Citations are explainable: "Doc X → Section Y → Paragraph Z"</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Hierarchical RAG</h3>
+        <p class="tagline">Index at multiple granularities. Search top-down. Stop when you have the right paragraph.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Very long documents (manuals, books, codebases)</li>
+              <li>Regulated industries needing precise citations</li>
+              <li>Multi-document QA across thousands of files</li>
+              <li>"Compare what doc A vs doc B says about X"</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Small flat corpora (overhead &gt; benefit)</li>
+              <li>Documents without natural hierarchy</li>
+              <li>Tight ingestion budgets (summaries = extra LLM calls)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Legal-research assistants (Harvey-class)</div>
+          <p>Court opinions are organised in three nested layers — case, headnote, paragraph — and the retriever walks them top-down. A search for <em>"fair use precedent in software copyright"</em> first filters to roughly fifty plausible cases, then zooms into the individual opinion paragraphs, so the citation a lawyer ends up reading still has a verifiable provenance.</p>
+        </div>
+<pre class="code-block"><span class="kw">def</span> <span class="fn">hierarchical_retrieve</span>(query):
+    qv = model.<span class="fn">encode</span>(query)
+    <span class="cm"># Stage 1: find candidate docs</span>
+    docs = doc_index.<span class="fn">search</span>(qv, k=<span class="num">10</span>)
+    <span class="cm"># Stage 2: find candidate sections within those docs</span>
+    sections = section_index.<span class="fn">search</span>(qv, k=<span class="num">5</span>,
+                          filter=<span class="str">"doc_id IN "</span> + <span class="fn">ids</span>(docs))
+    <span class="cm"># Stage 3: final paragraphs</span>
+    <span class="kw">return</span> para_index.<span class="fn">search</span>(qv, k=<span class="num">3</span>,
+                          filter=<span class="str">"section_id IN "</span> + <span class="fn">ids</span>(sections))</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- HyDE -->
+  <div class="tab-panel" data-panel="t-hyde">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrHY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+            </marker>
+          </defs>
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Generate a fake answer, search with IT</text>
+
+          <rect x="20" y="50" width="140" height="44" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="90" y="72" text-anchor="middle" class="svg-text" font-size="12">Short Query</text>
+          <text x="90" y="86" text-anchor="middle" class="svg-text-sm" font-size="9">"what is X?"</text>
+
+          <line x1="160" y1="72" x2="200" y2="72" class="svg-edge-active" marker-end="url(#arrHY)"/>
+
+          <rect x="200" y="50" width="150" height="44" rx="6" fill="#181c26" stroke="#ab47bc" class="svg-pulse"/>
+          <text x="275" y="68" text-anchor="middle" class="svg-text" font-size="11">🤖 LLM hypothesizes</text>
+          <text x="275" y="84" text-anchor="middle" class="svg-text-sm" font-size="9">draft answer (may be wrong!)</text>
+
+          <line x1="350" y1="72" x2="395" y2="72" class="svg-edge-active" marker-end="url(#arrHY)"/>
+
+          <rect x="395" y="50" width="75" height="44" rx="6" fill="#181c26" stroke="#44a340"/>
+          <text x="432" y="78" text-anchor="middle" class="svg-text" font-size="11">Embed</text>
+
+          <line x1="432" y1="94" x2="432" y2="130" class="svg-edge-active" marker-end="url(#arrHY)"/>
+
+          <rect x="320" y="130" width="150" height="50" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="395" y="153" text-anchor="middle" class="svg-text" font-size="11">Vector Search</text>
+          <text x="395" y="170" text-anchor="middle" class="svg-text-sm" font-size="10">long-form chunks match</text>
+          <text x="395" y="182" text-anchor="middle" class="svg-text-sm" font-size="10">long-form hypothesis ✓</text>
+
+          <line x1="320" y1="155" x2="240" y2="155" class="svg-edge-active" marker-end="url(#arrHY)"/>
+
+          <rect x="80" y="130" width="160" height="50" rx="6" fill="#ffde00"/>
+          <text x="160" y="155" text-anchor="middle" font-family="Space Grotesk" font-size="12" font-weight="700" fill="#0a0c10">🤖 LLM (final)</text>
+          <text x="160" y="172" text-anchor="middle" font-family="Inter" font-size="10" fill="#0a0c10">grounds on REAL chunks</text>
+
+          <text x="240" y="225" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">Key insight: long-form ↔ long-form embeddings match better</text>
+          <text x="240" y="245" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">than short-query ↔ long-form. Hypothesis bridges the gap.</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>HyDE (Hypothetical Document Embeddings)</h3>
+        <p class="tagline">Short queries embed poorly. So: have the LLM imagine the answer first, then search with <em>that</em>.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Very short queries ("explain X", "what is Y?")</li>
+              <li>Zero-shot search on domain you weren't trained on</li>
+              <li>When a reranker is too expensive</li>
+              <li>Academic / long-form content lookup</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Latency-critical apps (extra LLM call = +500 ms)</li>
+              <li>Cost-constrained pipelines</li>
+              <li>Exact-fact lookups (hypothesis may hallucinate too far)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Conversational web answers (Perplexity-class)</div>
+          <p>When a user types a two-word fragment like <em>"powerhouse cell"</em>, the raw query carries almost no signal. HyDE sidesteps that by asking the LLM to draft a paragraph-long candidate answer first, then embedding the draft and matching against the corpus — which is why such a sparse query still lands on real cellular-respiration papers.</p>
+        </div>
+<pre class="code-block"><span class="kw">def</span> <span class="fn">hyde_retrieve</span>(query):
+    <span class="cm"># Step 1: LLM drafts a hypothetical answer</span>
+    draft = llm(<span class="fn">f</span><span class="str">"Write a one-paragraph answer to: </span>{query}<span class="str">"</span>)
+    <span class="cm"># Step 2: embed the DRAFT (not the query)</span>
+    qv = model.<span class="fn">encode</span>(draft)
+    <span class="cm"># Step 3: vector search as usual</span>
+    <span class="kw">return</span> index.<span class="fn">search</span>(qv, k=<span class="num">5</span>)
+
+answer = llm(<span class="fn">prompt</span>(query, <span class="fn">hyde_retrieve</span>(query)))
+<span class="cm"># the hypothesis is THROWN AWAY — only real chunks ground the final answer</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE-BASED -->
+  <div class="tab-panel" data-panel="t-ref">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+            </marker>
+          </defs>
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Store pointers, not text</text>
+
+          <!-- Vector DB (only IDs + offsets) -->
+          <rect x="20" y="55" width="190" height="100" rx="8" fill="#181c26" stroke="#ab47bc"/>
+          <text x="115" y="78" text-anchor="middle" class="svg-text" font-size="12">🪶 Vector DB</text>
+          <text x="115" y="96" text-anchor="middle" class="svg-text-sm" font-size="10">vectors + (doc_id, offset)</text>
+          <text x="115" y="115" text-anchor="middle" class="svg-text-sm" fill="#ab47bc" font-size="10">NO original text stored</text>
+          <text x="115" y="138" text-anchor="middle" class="svg-text-sm" fill="#66bb6a" font-size="10">10× smaller, GDPR-safe</text>
+
+          <!-- Source storage -->
+          <rect x="270" y="55" width="190" height="100" rx="8" fill="#181c26" stroke="#44a340"/>
+          <text x="365" y="78" text-anchor="middle" class="svg-text" font-size="12">🔒 Source store</text>
+          <text x="365" y="96" text-anchor="middle" class="svg-text-sm" font-size="10">S3 / SharePoint / Git</text>
+          <text x="365" y="115" text-anchor="middle" class="svg-text-sm" font-size="10">access-controlled</text>
+          <text x="365" y="138" text-anchor="middle" class="svg-text-sm" fill="#66bb6a" font-size="10">single source of truth</text>
+
+          <!-- Flow -->
+          <rect x="20" y="195" width="100" height="40" rx="6" fill="#181c26" stroke="#ffde00"/>
+          <text x="70" y="219" text-anchor="middle" class="svg-text" font-size="11">Query</text>
+          <line x1="120" y1="215" x2="155" y2="215" class="svg-edge-active" marker-end="url(#arrR)"/>
+
+          <rect x="155" y="195" width="130" height="40" rx="6" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="220" y="219" text-anchor="middle" class="svg-text" font-size="11">Search → (id, offset)</text>
+          <line x1="285" y1="215" x2="320" y2="215" class="svg-edge-active" marker-end="url(#arrR)"/>
+
+          <rect x="320" y="195" width="140" height="40" rx="6" fill="#ffde00"/>
+          <text x="390" y="220" text-anchor="middle" font-family="Space Grotesk" font-size="11" font-weight="700" fill="#0a0c10">Fetch chunk → LLM</text>
+
+          <text x="240" y="265" text-anchor="middle" class="svg-text-sm" fill="#c8ccd6">Text is hydrated at query time. Revoke access → instant.</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Reference-based (Lightweight) RAG</h3>
+        <p class="tagline">The vector DB only knows where the text lives. Fetch the actual content from the authoritative source on demand.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Privacy-sensitive content (PHI, PII, classified)</li>
+              <li>Frequently-edited source documents</li>
+              <li>Per-user access control (row-level security)</li>
+              <li>Cost-sensitive storage (1 TB corpus → 100 GB vector DB)</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Read-heavy public corpora (extra fetch = latency)</li>
+              <li>Sources without stable offsets (live web pages)</li>
+              <li>Air-gapped vector DB deployments</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Microsoft 365 Copilot — chat with your tenant's data</div>
+          <p>Indexing Outlook, OneDrive, Teams for billions of users → storing the original text in a vector DB would duplicate petabytes <em>and</em> create a giant access-control nightmare. Copilot stores only embeddings + Graph API references. At query time, the user's existing M365 permissions decide whether the referenced item is hydrated. Revoke a file? Vector still exists but yields no content.</p>
+        </div>
+<pre class="code-block"><span class="cm"># Index time: store ONLY pointer + vector</span>
+<span class="kw">for</span> chunk <span class="kw">in</span> chunks:
+    vec = model.<span class="fn">encode</span>(chunk.text)
+    index.<span class="fn">add</span>(vec, {
+        <span class="str">"doc_id"</span>: chunk.doc_id,
+        <span class="str">"offset"</span>: chunk.offset,
+        <span class="str">"length"</span>: chunk.length,
+    })   <span class="cm"># note: NO 'text' field</span>
+
+<span class="cm"># Query time: hydrate from source-of-truth, with ACL check</span>
+<span class="kw">def</span> <span class="fn">retrieve</span>(query, user):
+    hits = index.<span class="fn">search</span>(model.<span class="fn">encode</span>(query), k=<span class="num">5</span>)
+    <span class="kw">return</span> [source.<span class="fn">fetch</span>(h.doc_id, h.offset, h.length, user)
+            <span class="kw">for</span> h <span class="kw">in</span> hits <span class="kw">if</span> source.<span class="fn">can_read</span>(h.doc_id, user)]</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison summary row -->
+<section class="fade-in">
+  <h3>At-a-glance: which type to pick</h3>
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>RAG Type</th>
+          <th>Latency</th>
+          <th>Cost</th>
+          <th>Recall</th>
+          <th>Precision</th>
+          <th>Pick when…</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Naive (Vector)</td>
+          <td><span class="badge green">~150 ms</span></td>
+          <td><span class="badge green">$</span></td>
+          <td><span class="badge yellow">good</span></td>
+          <td><span class="badge yellow">good</span></td>
+          <td>You're starting out</td>
+        </tr>
+        <tr>
+          <td>Hybrid (BM25+Vec)</td>
+          <td><span class="badge yellow">~200 ms</span></td>
+          <td><span class="badge yellow">$$</span></td>
+          <td><span class="badge green">high</span></td>
+          <td><span class="badge green">high</span></td>
+          <td>Exact terms matter (code, legal)</td>
+        </tr>
+        <tr>
+          <td>Hierarchical</td>
+          <td><span class="badge yellow">~250 ms</span></td>
+          <td><span class="badge yellow">$$</span></td>
+          <td><span class="badge green">high</span></td>
+          <td><span class="badge green">high</span></td>
+          <td>Huge structured corpora</td>
+        </tr>
+        <tr>
+          <td>HyDE</td>
+          <td><span class="badge red">~700 ms</span></td>
+          <td><span class="badge red">$$$</span></td>
+          <td><span class="badge green">high</span></td>
+          <td><span class="badge yellow">good</span></td>
+          <td>Short queries, long docs</td>
+        </tr>
+        <tr>
+          <td>Reference-based</td>
+          <td><span class="badge yellow">~250 ms</span></td>
+          <td><span class="badge green">$</span></td>
+          <td><span class="badge yellow">good</span></td>
+          <td><span class="badge green">high</span></td>
+          <td>Privacy / ACL critical</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 06 — VECTOR DATABASES
+============================================================ -->
+<div class="section-divider fade-in" id="vdb">
+  <div class="section-number">06</div>
+  <h2>Vector Databases Compared</h2>
+  <p>The vector store is the beating heart of every RAG system. Six contenders dominate production
+  in 2025 — each with a sweet spot.</p>
+</div>
+
+<section class="fade-in">
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Database</th>
+          <th>Best for</th>
+          <th>Deployment</th>
+          <th>Strengths</th>
+          <th>Tradeoffs</th>
+          <th>License</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Qdrant</td>
+          <td>Production hybrid search</td>
+          <td>Self-host / Cloud</td>
+          <td>Rust-fast, rich filtering, hybrid built-in, generous free tier</td>
+          <td>Smaller ecosystem than Pinecone</td>
+          <td><span class="badge green">Apache 2.0</span></td>
+        </tr>
+        <tr>
+          <td>Milvus / Zilliz</td>
+          <td>Billion-scale corpora</td>
+          <td>K8s / Cloud</td>
+          <td>Horizontal scaling, GPU index, multiple ANN algorithms</td>
+          <td>Complex to operate at small scale</td>
+          <td><span class="badge green">Apache 2.0</span></td>
+        </tr>
+        <tr>
+          <td>Weaviate</td>
+          <td>Schema-first apps</td>
+          <td>Self-host / Cloud</td>
+          <td>Built-in vectorizers, GraphQL API, multi-tenancy</td>
+          <td>Tied to its own schema model</td>
+          <td><span class="badge green">BSD-3</span></td>
+        </tr>
+        <tr>
+          <td>Pinecone</td>
+          <td>Fully managed, zero-ops</td>
+          <td>SaaS only</td>
+          <td>Serverless, auto-scaling, the "AWS" of vector DBs</td>
+          <td>Closed source, can get expensive</td>
+          <td><span class="badge red">Proprietary</span></td>
+        </tr>
+        <tr>
+          <td>pgvector (Postgres)</td>
+          <td>Existing SQL workloads</td>
+          <td>Anywhere PG runs</td>
+          <td>Vectors next to your relational data, transactional, free</td>
+          <td>Slower at &gt; 10M vectors, no native hybrid</td>
+          <td><span class="badge green">PostgreSQL</span></td>
+        </tr>
+        <tr>
+          <td>OpenSearch / Elastic</td>
+          <td>Hybrid search at scale</td>
+          <td>Self-host / Cloud</td>
+          <td>BM25 + kNN in one engine, mature ops tooling</td>
+          <td>JVM overhead, requires tuning</td>
+          <td><span class="badge green">Apache 2.0 / Elastic</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:2rem;">A production hybrid query (OpenSearch DSL)</h3>
+<pre class="code-block"><span class="cm">// Single query that combines BM25 + dense kNN with RRF</span>
+{
+  <span class="str">"size"</span>: <span class="num">10</span>,
+  <span class="str">"query"</span>: {
+    <span class="str">"hybrid"</span>: {
+      <span class="str">"queries"</span>: [
+        {<span class="str">"match"</span>: {<span class="str">"chunk_text"</span>: <span class="str">"powerhouse of the cell"</span>}},   <span class="cm">// BM25</span>
+        {<span class="str">"knn"</span>: {<span class="str">"chunk_vec"</span>: {<span class="str">"vector"</span>: [<span class="num">0.12</span>, <span class="num">-0.45</span>, <span class="str">"..."</span>], <span class="str">"k"</span>: <span class="num">10</span>}}}  <span class="cm">// dense</span>
+      ]
+    }
+  },
+  <span class="str">"search_pipeline"</span>: <span class="str">"rrf-pipeline"</span>          <span class="cm">// fuses both rank lists</span>
+}</pre>
+</section>
+
+<!-- ============================================================
+     SECTION 07 — RE-RANKING (NEW)
+============================================================ -->
+<div class="section-divider fade-in" id="rerank">
+  <div class="section-number">07</div>
+  <h2>Re-ranking — the quality control layer</h2>
+  <p>Your vector search returned 20 "relevant" chunks. Half of them are noise. Pass the noisy 20 to
+  your LLM and the answer will be confidently wrong. A <strong>re-ranker</strong> is the second
+  pass that re-scores those candidates with a deeper model so only the truly relevant 3 reach
+  the prompt — the difference between 70% and 95% answer accuracy.</p>
+</div>
+
+<section class="fade-in">
+  <h3>The research-paper analogy</h3>
+  <p style="color:var(--text-muted); font-size:1rem; max-width:760px;">Writing a research paper, you first pull <em>every</em> source
+  the library catalog returns for your topic. That's <strong>retrieval</strong>. Then you sit down and
+  critically read each one — checking credibility, depth, fit — and pick the handful you'll actually
+  cite. That second pass is <strong>re-ranking</strong>. The LLM only sees the chosen few.</p>
+
+  <div class="pipeline-wrap">
+    <h4>The two-stage retrieval pattern — fast recall, then precise re-ranking</h4>
+    <svg viewBox="0 0 1000 360" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrRR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+        </marker>
+        <linearGradient id="rrGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#ab47bc"/>
+          <stop offset="100%" stop-color="#ffde00"/>
+        </linearGradient>
+      </defs>
+
+      <text x="30" y="35" class="svg-text" fill="#ffde00" font-size="13">STAGE 1 — RECALL (cheap, broad)</text>
+      <text x="560" y="35" class="svg-text" fill="#44a340" font-size="13">STAGE 2 — PRECISION (deep, narrow)</text>
+
+      <!-- Query -->
+      <rect x="20" y="60" width="110" height="50" rx="8" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="75" y="82" text-anchor="middle" class="svg-text">👤 Query</text>
+      <text x="75" y="99" text-anchor="middle" class="svg-text-sm">"what is ethics?"</text>
+
+      <line x1="130" y1="85" x2="170" y2="85" class="svg-edge-active" marker-end="url(#arrRR)"/>
+
+      <!-- Vector retriever -->
+      <rect x="170" y="60" width="140" height="50" rx="8" fill="#181c26" stroke="#4fc3f7" stroke-width="1.5"/>
+      <text x="240" y="82" text-anchor="middle" class="svg-text">🔍 Vector Retrieval</text>
+      <text x="240" y="99" text-anchor="middle" class="svg-text-sm">cosine top-20, ~10 ms</text>
+
+      <line x1="310" y1="85" x2="345" y2="85" class="svg-edge-active" marker-end="url(#arrRR)"/>
+
+      <!-- 20 noisy candidates -->
+      <rect x="345" y="50" width="170" height="180" rx="10" fill="#0a0c10" stroke="#ef5350" stroke-dasharray="4 3"/>
+      <text x="430" y="72" text-anchor="middle" class="svg-text" fill="#ef5350">20 candidates</text>
+      <text x="430" y="87" text-anchor="middle" class="svg-text-sm" fill="#ef5350">(noisy, mixed quality)</text>
+
+      <!-- candidate dots -->
+      <g font-family="JetBrains Mono" font-size="9" fill="#c8ccd6">
+        <circle cx="365" cy="108" r="5" fill="#66bb6a"/><text x="376" y="112">doc 4 ✓ perfect</text>
+        <circle cx="365" cy="125" r="5" fill="#ef5350"/><text x="376" y="129">doc 18 ✗ off-topic</text>
+        <circle cx="365" cy="142" r="5" fill="#ef5350"/><text x="376" y="146">doc 9 ✗ dup</text>
+        <circle cx="365" cy="159" r="5" fill="#66bb6a"/><text x="376" y="163">doc 1 ✓ strong</text>
+        <circle cx="365" cy="176" r="5" fill="#ffde00"/><text x="376" y="180">doc 11 ~ partial</text>
+        <circle cx="365" cy="193" r="5" fill="#ef5350"/><text x="376" y="197">doc 17 ✗ stale</text>
+        <circle cx="365" cy="210" r="5" fill="#66bb6a"/><text x="376" y="214">doc 7 ✓ best</text>
+      </g>
+      <text x="430" y="225" text-anchor="middle" class="svg-text-sm" font-size="10">+13 more…</text>
+
+      <line x1="515" y1="140" x2="560" y2="140" class="svg-edge-active" marker-end="url(#arrRR)"/>
+
+      <!-- Reranker -->
+      <rect x="560" y="95" width="180" height="95" rx="10" fill="url(#rrGrad)" stroke="#fff" stroke-width="1.5" class="svg-pulse"/>
+      <text x="650" y="120" text-anchor="middle" class="svg-text" font-size="14">⚖ Re-ranker</text>
+      <text x="650" y="140" text-anchor="middle" class="svg-text-sm" fill="#fff">cross-encoder / LLM-judge /</text>
+      <text x="650" y="154" text-anchor="middle" class="svg-text-sm" fill="#fff">ColBERT / Cohere API</text>
+      <text x="650" y="175" text-anchor="middle" class="svg-text-sm" fill="#fff" font-weight="700">pairwise scoring</text>
+
+      <line x1="740" y1="140" x2="775" y2="140" class="svg-edge-active" marker-end="url(#arrRR)"/>
+
+      <!-- Top 3 reranked -->
+      <rect x="775" y="95" width="205" height="95" rx="10" fill="#0a0c10" stroke="#44a340" stroke-width="1.8"/>
+      <text x="877" y="117" text-anchor="middle" class="svg-text" fill="#44a340">Top-3 reranked</text>
+      <g font-family="JetBrains Mono" font-size="10" fill="#66bb6a">
+        <text x="790" y="138">→ doc 7  (rerank 0.94)</text>
+        <text x="790" y="155">→ doc 4  (rerank 0.91)</text>
+        <text x="790" y="172">→ doc 1  (rerank 0.87)</text>
+      </g>
+      <text x="877" y="186" text-anchor="middle" class="svg-text-sm" font-size="9" fill="#c8ccd6">noise removed</text>
+
+      <!-- Down to LLM -->
+      <line x1="877" y1="190" x2="877" y2="225" class="svg-edge-active" marker-end="url(#arrRR)"/>
+      <rect x="795" y="230" width="165" height="40" rx="8" fill="#ffde00"/>
+      <text x="877" y="255" text-anchor="middle" font-family="Space Grotesk" font-size="12" font-weight="700" fill="#0a0c10">🤖 LLM → grounded answer</text>
+
+      <!-- Caption -->
+      <line x1="30" y1="295" x2="970" y2="295" stroke="#2a2f3e" stroke-dasharray="2 3"/>
+      <text x="30" y="315" class="svg-text-sm" font-size="11">Stage 1 maximizes <tspan fill="#ffde00">RECALL</tspan> (don't miss the right doc).</text>
+      <text x="500" y="315" class="svg-text-sm" font-size="11">Stage 2 maximizes <tspan fill="#44a340">PRECISION</tspan> (only feed the LLM truly relevant docs).</text>
+      <text x="30" y="335" class="svg-text-sm" font-size="11" fill="#ab47bc">Net result: better answers, fewer hallucinations, often <tspan font-weight="700">lower total latency</tspan> (3.15s → 2.42s in Cohere's pdf example) because the LLM has less context to read.</text>
+    </svg>
+  </div>
+
+  <!-- Impact stats -->
+  <h3 style="margin-top:2rem;">Why bother? The measured impact</h3>
+  <div class="session-info" style="margin-top:1.25rem;">
+    <div class="session-stat"><div class="number">70%→95%</div><div class="label">Answer accuracy (legal RAG)</div></div>
+    <div class="session-stat"><div class="number">+40%</div><div class="label">Citation precision (academic)</div></div>
+    <div class="session-stat"><div class="number">-23%</div><div class="label">End-to-end latency (less context = faster LLM)</div></div>
+    <div class="session-stat"><div class="number">-50%</div><div class="label">Manual review time saved</div></div>
+    <div class="session-stat"><div class="number">-30%</div><div class="label">Hallucinations</div></div>
+  </div>
+
+  <h3 style="margin-top:2rem;">Why basic retrieval alone falls short</h3>
+  <div class="fail-grid">
+    <div class="fail-q">
+      <div class="qnum">1</div>
+      <h5>Shallow semantic match</h5>
+      <p>Embeddings score by overall vector closeness — they miss subtle nuance ("<em>not</em> recommended" embeds close to "recommended").</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">2</div>
+      <h5>Dimensionality collapse</h5>
+      <p>Compressing meaning to 384–1536 floats causes collisions: unrelated concepts can land near each other in vector space.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">3</div>
+      <h5>Domain drift</h5>
+      <p>Embeddings perform best on data resembling their training set. Out-of-domain corpora (legal, medical, code) tank recall.</p>
+    </div>
+    <div class="fail-q">
+      <div class="qnum">4</div>
+      <h5>"Lost in the middle"</h5>
+      <p>LLM recall <em>drops</em> as you stuff more context. Top-20 unsorted &gt; Top-3 reranked is almost never true.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5-tab Reranker explorer -->
+<section class="fade-in" data-tab-group="rrk">
+  <h3>The five reranker families</h3>
+  <p style="color:var(--text-muted); font-size:1rem;">Each trades latency, cost, and quality differently. Click through:</p>
+
+  <div class="tabstrip c5" role="tablist">
+    <button class="tab-btn active" data-tab="rrk-bm25"><span class="tb-icon">🔤</span>BM25 (Lexical)</button>
+    <button class="tab-btn" data-tab="rrk-ce"><span class="tb-icon">🔀</span>Cross-Encoder</button>
+    <button class="tab-btn" data-tab="rrk-mv"><span class="tb-icon">🧩</span>Multi-Vector (ColBERT)</button>
+    <button class="tab-btn" data-tab="rrk-llm"><span class="tb-icon">⚖</span>LLM-as-Judge</button>
+    <button class="tab-btn" data-tab="rrk-api"><span class="tb-icon">☁</span>API (Cohere/Flash)</button>
+  </div>
+
+  <!-- BM25 -->
+  <div class="tab-panel active" data-panel="rrk-bm25">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">BM25 — probabilistic lexical scoring</text>
+
+          <!-- formula display -->
+          <rect x="30" y="50" width="420" height="60" rx="8" fill="#050608" stroke="#ff7043"/>
+          <text x="240" y="80" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#ff7043">score(D, Q) = Σ IDF(qᵢ) · (f(qᵢ, D)·(k₁+1))</text>
+          <text x="240" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#c8ccd6">÷ (f(qᵢ, D) + k₁·(1 − b + b·|D|/avgdl))</text>
+
+          <!-- example: word "ethics" -->
+          <text x="30" y="140" class="svg-text-sm" fill="#ffde00">Query term "ethics" — scoring 3 docs of equal vector similarity:</text>
+
+          <!-- doc bars -->
+          <text x="40" y="172" class="svg-text-sm">doc 4 (300 words, term 5×)</text>
+          <rect x="230" y="160" width="200" height="14" fill="#44a340"/>
+          <text x="438" y="172" class="svg-text-sm" fill="#44a340">3.41</text>
+
+          <text x="40" y="197" class="svg-text-sm">doc 11 (800 words, term 3×)</text>
+          <rect x="230" y="185" width="120" height="14" fill="#ffde00"/>
+          <text x="358" y="197" class="svg-text-sm" fill="#ffde00">2.05</text>
+
+          <text x="40" y="222" class="svg-text-sm">doc 9 (2000 words, term 4×)</text>
+          <rect x="230" y="210" width="55" height="14" fill="#ef5350"/>
+          <text x="294" y="222" class="svg-text-sm" fill="#ef5350">0.94</text>
+
+          <text x="240" y="258" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ Rewards term-density, penalizes long docs that just mention the word</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>BM25 — the lightweight lexical reranker</h3>
+        <p class="tagline">No ML model, no GPU — just term frequency, document length and inverse-doc-frequency. Often the first reranker to try.</p>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Keyword-rich queries (SKUs, errors, names)</li>
+              <li>Cheap reranking of 100–1000 candidates</li>
+              <li>As the lexical leg of a hybrid pipeline</li>
+              <li>Resource-constrained / edge deployments</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Paraphrased queries (zero term overlap)</li>
+              <li>Conceptual / multi-hop reasoning</li>
+              <li>Long-form narrative ranking</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Measured outcome</div>
+          <div class="uc-title">+20% precision on keyword-heavy medical search</div>
+          <p>Reranking the top-20 vector hits for "symptoms of diabetes" with BM25 surfaces concise, term-rich passages over verbose ones — boosting precision@3 by 20 percentage points in published medical RAG benchmarks.</p>
+        </div>
+<pre class="code-block"><span class="kw">from</span> rank_bm25 <span class="kw">import</span> BM25Okapi
+
+top20 = vector_index.<span class="fn">search</span>(query, k=<span class="num">20</span>)        <span class="cm"># Stage 1</span>
+tokens = [d.text.<span class="fn">split</span>() <span class="kw">for</span> d <span class="kw">in</span> top20]
+bm25 = <span class="fn">BM25Okapi</span>(tokens)
+scores = bm25.<span class="fn">get_scores</span>(query.<span class="fn">split</span>())
+ranked = <span class="fn">sorted</span>(<span class="fn">zip</span>(top20, scores), key=<span class="kw">lambda</span> x:-x[<span class="num">1</span>])
+top3 = [d <span class="kw">for</span> d,_ <span class="kw">in</span> ranked[:<span class="num">3</span>]]                <span class="cm"># Stage 2 done</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- CROSS ENCODER -->
+  <div class="tab-panel" data-panel="rrk-ce">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 290" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">Cross-Encoder — query + doc into ONE transformer</text>
+
+          <!-- Bi-encoder (left, retrieval) -->
+          <rect x="20" y="50" width="205" height="100" rx="8" fill="#0a0c10" stroke="#4fc3f7" stroke-dasharray="3 3"/>
+          <text x="122" y="68" text-anchor="middle" class="svg-text" fill="#4fc3f7" font-size="11">Bi-encoder (retrieval)</text>
+          <rect x="35" y="82" width="75" height="24" rx="4" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="72" y="98" text-anchor="middle" class="svg-text-sm">Q→enc</text>
+          <rect x="135" y="82" width="75" height="24" rx="4" fill="#181c26" stroke="#4fc3f7"/>
+          <text x="172" y="98" text-anchor="middle" class="svg-text-sm">D→enc</text>
+          <text x="122" y="125" text-anchor="middle" class="svg-text-sm">cosine(qv, dv) — separate towers</text>
+          <text x="122" y="140" text-anchor="middle" class="svg-text-sm" fill="#ef5350">no query↔doc interaction</text>
+
+          <!-- Cross-encoder (right, reranking) -->
+          <rect x="255" y="50" width="205" height="100" rx="8" fill="#0a0c10" stroke="#44a340" stroke-width="2"/>
+          <text x="357" y="68" text-anchor="middle" class="svg-text" fill="#44a340" font-size="11">Cross-encoder (rerank)</text>
+          <rect x="275" y="82" width="165" height="24" rx="4" fill="#181c26" stroke="#44a340"/>
+          <text x="357" y="98" text-anchor="middle" class="svg-text-sm">[CLS] Q [SEP] D [SEP]</text>
+          <text x="357" y="125" text-anchor="middle" class="svg-text-sm" fill="#44a340">cross-attention every Q↔D token</text>
+          <text x="357" y="140" text-anchor="middle" class="svg-text-sm" fill="#44a340">→ single relevance logit</text>
+
+          <!-- score table -->
+          <text x="30" y="180" class="svg-text-sm" fill="#ffde00">Sample logits over top-4 candidates:</text>
+          <g font-family="JetBrains Mono" font-size="11">
+            <rect x="30" y="190" width="420" height="22" fill="#0a0c10" stroke="#44a340"/>
+            <text x="40" y="206" fill="#66bb6a">doc 4    score = +3.41  ✓ highly relevant</text>
+            <rect x="30" y="214" width="420" height="22" fill="#0a0c10" stroke="#44a340"/>
+            <text x="40" y="230" fill="#66bb6a">doc 1    score = +2.63  ✓ relevant</text>
+            <rect x="30" y="238" width="420" height="22" fill="#0a0c10" stroke="#ef5350"/>
+            <text x="40" y="254" fill="#ef5350">doc 18   score = -2.92  ✗ off-topic</text>
+            <rect x="30" y="262" width="420" height="22" fill="#0a0c10" stroke="#ef5350"/>
+            <text x="40" y="278" fill="#ef5350">doc 9    score = -3.24  ✗ weakly related</text>
+          </g>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Cross-Encoder — the gold standard for relevance</h3>
+        <p class="tagline">A small transformer (e.g. <code>ms-marco-MiniLM-L-6-v2</code>) ingests query+doc together, attends across both, returns one relevance score per pair.</p>
+        <ul class="bullets">
+          <li><strong>Why it wins:</strong> cross-attention lets the model spot <em>which word in the query matches which word in the doc</em>, including negations and modifiers.</li>
+          <li><strong>Why it's slow:</strong> N candidates = N forward passes. Cannot be precomputed.</li>
+          <li><strong>Sweet spot:</strong> rerank top 20–50 candidates — anything more becomes the latency bottleneck.</li>
+          <li><strong>Open-source picks:</strong> bge-reranker-base / -large, ms-marco-MiniLM, mxbai-rerank.</li>
+        </ul>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Quality-critical RAG (legal, medical, research)</li>
+              <li>Reranking 20–50 vector hits</li>
+              <li>Self-hosted, no API dependency</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Real-time chat (adds 200–500 ms)</li>
+              <li>Reranking 1000+ candidates</li>
+              <li>CPU-only deployments at scale</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Academic paper search — +40% citation precision</div>
+          <p>Reranking top-20 ArXiv embedding hits with <code>bge-reranker-large</code> identifies the deeply-relevant papers (not just topically similar) — lifting cited-paper precision by ~40% in published benchmarks.</p>
+        </div>
+<pre class="code-block"><span class="kw">from</span> sentence_transformers <span class="kw">import</span> CrossEncoder
+
+encoder = <span class="fn">CrossEncoder</span>(<span class="str">"cross-encoder/ms-marco-MiniLM-L-6-v2"</span>)
+
+top20 = vector_index.<span class="fn">search</span>(query, k=<span class="num">20</span>)
+pairs = [(query, d.text) <span class="kw">for</span> d <span class="kw">in</span> top20]
+scores = encoder.<span class="fn">predict</span>(pairs)        <span class="cm"># 20 forward passes</span>
+top3 = [d <span class="kw">for</span> _, d <span class="kw">in</span>
+        <span class="fn">sorted</span>(<span class="fn">zip</span>(scores, top20), reverse=<span class="kw">True</span>)[:<span class="num">3</span>]]</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- MULTI-VECTOR / COLBERT -->
+  <div class="tab-panel" data-panel="rrk-mv">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 290" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">ColBERT — late-interaction MaxSim</text>
+
+          <!-- Query tokens -->
+          <text x="45" y="55" class="svg-text-sm" fill="#ffde00">QUERY tokens</text>
+          <g>
+            <rect x="30" y="65" width="60" height="22" rx="3" fill="#181c26" stroke="#ffde00"/>
+            <text x="60" y="81" text-anchor="middle" class="svg-text-sm">q₁ what</text>
+            <rect x="30" y="92" width="60" height="22" rx="3" fill="#181c26" stroke="#ffde00"/>
+            <text x="60" y="108" text-anchor="middle" class="svg-text-sm">q₂ is</text>
+            <rect x="30" y="119" width="60" height="22" rx="3" fill="#181c26" stroke="#ffde00"/>
+            <text x="60" y="135" text-anchor="middle" class="svg-text-sm">q₃ ethics</text>
+            <rect x="30" y="146" width="60" height="22" rx="3" fill="#181c26" stroke="#ffde00"/>
+            <text x="60" y="162" text-anchor="middle" class="svg-text-sm">q₄ ?</text>
+          </g>
+
+          <!-- Doc tokens -->
+          <text x="345" y="55" class="svg-text-sm" fill="#44a340">DOC tokens (pre-encoded)</text>
+          <g>
+            <rect x="310" y="65" width="70" height="22" rx="3" fill="#181c26" stroke="#44a340"/>
+            <text x="345" y="81" text-anchor="middle" class="svg-text-sm">d₁ ethics</text>
+            <rect x="385" y="65" width="70" height="22" rx="3" fill="#181c26" stroke="#44a340"/>
+            <text x="420" y="81" text-anchor="middle" class="svg-text-sm">d₂ are</text>
+            <rect x="310" y="92" width="70" height="22" rx="3" fill="#181c26" stroke="#44a340"/>
+            <text x="345" y="108" text-anchor="middle" class="svg-text-sm">d₃ moral</text>
+            <rect x="385" y="92" width="70" height="22" rx="3" fill="#181c26" stroke="#44a340"/>
+            <text x="420" y="108" text-anchor="middle" class="svg-text-sm">d₄ rules</text>
+            <rect x="310" y="119" width="70" height="22" rx="3" fill="#181c26" stroke="#44a340"/>
+            <text x="345" y="135" text-anchor="middle" class="svg-text-sm">d₅ for</text>
+            <rect x="385" y="119" width="70" height="22" rx="3" fill="#181c26" stroke="#44a340"/>
+            <text x="420" y="135" text-anchor="middle" class="svg-text-sm">d₆ conduct</text>
+          </g>
+
+          <!-- max-sim arrows from q3 -->
+          <line x1="90" y1="131" x2="310" y2="76" stroke="#ab47bc" stroke-width="1.4" stroke-dasharray="3 2"/>
+          <line x1="90" y1="131" x2="310" y2="103" stroke="#5a6175" stroke-width="0.7"/>
+          <line x1="90" y1="131" x2="310" y2="130" stroke="#5a6175" stroke-width="0.7"/>
+          <text x="195" y="95" class="svg-text-sm" fill="#ab47bc" font-size="10">MaxSim(q₃) = 0.91</text>
+
+          <!-- Aggregation -->
+          <rect x="100" y="185" width="280" height="50" rx="8" fill="#0a0c10" stroke="#ab47bc" stroke-width="1.8"/>
+          <text x="240" y="205" text-anchor="middle" class="svg-text" fill="#ab47bc" font-size="12">score(Q, D) = Σᵢ maxⱼ sim(qᵢ, dⱼ)</text>
+          <text x="240" y="222" text-anchor="middle" class="svg-text-sm">sum over query tokens of best doc-token match</text>
+
+          <text x="240" y="263" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ token-level granularity, but doc vectors are PRE-COMPUTED — fast</text>
+          <text x="240" y="280" text-anchor="middle" class="svg-text-sm" fill="#66bb6a">✓ 5–10× faster than cross-encoder, ~90% of the quality</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>Multi-Vector / ColBERT — late interaction</h3>
+        <p class="tagline">Store one vector <em>per token</em>. At query time, sum the max-similarity from each query token to any document token. Token-level precision, vector-search speed.</p>
+        <ul class="bullets">
+          <li><strong>Late interaction</strong> = query + doc encoded independently (cacheable), only the comparison happens online.</li>
+          <li><strong>Storage cost:</strong> ~10–50× the bytes of a single-vector index. The price of token-level precision.</li>
+          <li><strong>Modern variants:</strong> ColBERTv2 quantizes to ~30× less storage; PLAID makes search practical at billion-doc scale.</li>
+          <li><strong>Why it matters:</strong> beats single-vector retrievers <em>and</em> rerankers on out-of-domain queries.</li>
+        </ul>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Mid-latency RAG (50–150 ms rerank budget)</li>
+              <li>Out-of-domain corpora where embeddings struggle</li>
+              <li>End-to-end retriever (no separate reranker)</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Storage-tight deployments</li>
+              <li>Very long documents (token count explodes)</li>
+              <li>Multilingual at scale (training data limits)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Production example</div>
+          <div class="uc-title">Vespa &amp; Qdrant ColBERT mode for enterprise search</div>
+          <p>Vespa and Qdrant both ship native ColBERT support — enterprises use it as a single-stage retriever that matches cross-encoder rerank quality at &lt; 80 ms p99 on 100M doc corpora.</p>
+        </div>
+<pre class="code-block"><span class="kw">from</span> ragatouille <span class="kw">import</span> RAGPretrainedModel
+
+rag = RAGPretrainedModel.<span class="fn">from_pretrained</span>(<span class="str">"colbert-ir/colbertv2.0"</span>)
+rag.<span class="fn">index</span>(documents)               <span class="cm"># pre-computes token vectors</span>
+
+hits = rag.<span class="fn">search</span>(query, k=<span class="num">10</span>)   <span class="cm"># MaxSim late-interaction</span>
+<span class="cm"># hits already reranked by token-level relevance</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLM as JUDGE -->
+  <div class="tab-panel" data-panel="rrk-llm">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 290" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">3 prompting strategies for LLM-as-judge</text>
+
+          <!-- Pointwise -->
+          <rect x="20" y="45" width="440" height="68" rx="8" fill="#0a0c10" stroke="#4fc3f7"/>
+          <text x="35" y="65" class="svg-text" fill="#4fc3f7" font-size="12">POINTWISE</text>
+          <text x="35" y="82" class="svg-text-sm">Score each doc 0–1 individually.</text>
+          <text x="35" y="98" class="svg-text-sm" font-family="JetBrains Mono" font-size="10" fill="#ffde00">prompt: "Rate relevance of DOC to QUERY 0–1: …"</text>
+          <text x="35" y="110" class="svg-text-sm" font-size="10" fill="#66bb6a">Simple. N LLM calls. Easily parallelized.</text>
+
+          <!-- Listwise -->
+          <rect x="20" y="123" width="440" height="68" rx="8" fill="#0a0c10" stroke="#ab47bc"/>
+          <text x="35" y="143" class="svg-text" fill="#ab47bc" font-size="12">LISTWISE</text>
+          <text x="35" y="160" class="svg-text-sm">Show all candidates in one prompt, get back ranked IDs.</text>
+          <text x="35" y="176" class="svg-text-sm" font-family="JetBrains Mono" font-size="10" fill="#ffde00">prompt: "Rank these 10 docs by relevance: [1…] [2…] → ?"</text>
+          <text x="35" y="188" class="svg-text-sm" font-size="10" fill="#66bb6a">Sees comparisons. Limited by context window.</text>
+
+          <!-- Pairwise -->
+          <rect x="20" y="201" width="440" height="68" rx="8" fill="#0a0c10" stroke="#ff7043"/>
+          <text x="35" y="221" class="svg-text" fill="#ff7043" font-size="12">PAIRWISE</text>
+          <text x="35" y="238" class="svg-text-sm">For each (doc_i, doc_j), ask: which is more relevant? Aggregate.</text>
+          <text x="35" y="254" class="svg-text-sm" font-family="JetBrains Mono" font-size="10" fill="#ffde00">prompt: "Q: …. A or B more relevant? → A"</text>
+          <text x="35" y="266" class="svg-text-sm" font-size="10" fill="#66bb6a">Highest accuracy. O(N²) LLM calls — expensive.</text>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>LLM-as-Judge — use the model itself to rank</h3>
+        <p class="tagline">Skip the dedicated reranker model. Have GPT-4 / Claude / a small fine-tuned LLM (RankT5, RankZephyr, RankGPT) judge relevance via prompting.</p>
+        <ul class="bullets">
+          <li><strong>Zero training data needed.</strong> Pure prompt engineering on a model you already pay for.</li>
+          <li><strong>Quality ceiling:</strong> a strong LLM judge often beats specialized rerankers on novel domains.</li>
+          <li><strong>Cost ceiling:</strong> a single pairwise sweep over top-20 = ~190 LLM calls per query. Listwise cuts it to one call but blows the context window.</li>
+          <li><strong>Fine-tuned variants</strong> (RankZephyr, RankGPT-4) compress this into a single ~7B model call with API-grade quality.</li>
+        </ul>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>Domains with no labelled training data</li>
+              <li>Low-volume, high-stakes queries</li>
+              <li>When you need <em>explanations</em> for ranking</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>High-QPS production traffic</li>
+              <li>Tight latency budgets (&lt; 200 ms)</li>
+              <li>Cost-sensitive consumer apps</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Practical use</div>
+          <div class="uc-title">Eval &amp; offline-labelling pipelines</div>
+          <p>Most teams use LLM-as-judge to <em>generate gold labels</em> offline, then train a cheap cross-encoder on those labels for production. Best of both worlds: GPT-4 quality, MiniLM latency.</p>
+        </div>
+<pre class="code-block"><span class="cm"># Listwise reranking in a single LLM call</span>
+prompt = <span class="fn">f</span><span class="str">"""Rank these documents by relevance to the query.
+QUERY: </span>{query}<span class="str">
+
+DOCS:
+[1] </span>{docs[<span class="num">0</span>]}<span class="str">
+[2] </span>{docs[<span class="num">1</span>]}<span class="str">
+[3] </span>{docs[<span class="num">2</span>]}<span class="str">
+…
+
+Return JSON array of IDs in ranked order, best first."""</span>
+
+ranked_ids = json.<span class="fn">loads</span>(<span class="fn">llm</span>(prompt))    <span class="cm"># e.g. [4, 1, 7, 2, ...]</span>
+top3 = [docs[i-<span class="num">1</span>] <span class="kw">for</span> i <span class="kw">in</span> ranked_ids[:<span class="num">3</span>]]</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- API RERANKERS -->
+  <div class="tab-panel" data-panel="rrk-api">
+    <div class="panel-grid">
+      <div class="panel-visual">
+        <svg viewBox="0 0 480 290" xmlns="http://www.w3.org/2000/svg">
+          <text x="240" y="22" text-anchor="middle" class="svg-text" fill="#ffde00">One API call, fully-managed reranking</text>
+
+          <rect x="20" y="60" width="130" height="50" rx="8" fill="#181c26" stroke="#ffde00"/>
+          <text x="85" y="82" text-anchor="middle" class="svg-text" font-size="12">Your top-20</text>
+          <text x="85" y="98" text-anchor="middle" class="svg-text-sm">+ query string</text>
+
+          <line x1="150" y1="85" x2="185" y2="85" class="svg-edge-active" marker-end="url(#arrRR)"/>
+
+          <rect x="185" y="55" width="170" height="60" rx="10" fill="#0a0c10" stroke="#ab47bc" stroke-width="2" class="svg-pulse"/>
+          <text x="270" y="78" text-anchor="middle" class="svg-text" fill="#ab47bc">☁ Reranker API</text>
+          <text x="270" y="95" text-anchor="middle" class="svg-text-sm">Cohere rerank-v3.5</text>
+          <text x="270" y="108" text-anchor="middle" class="svg-text-sm">Jina / Mixedbread / Voyage</text>
+
+          <line x1="355" y1="85" x2="390" y2="85" class="svg-edge-active" marker-end="url(#arrRR)"/>
+
+          <rect x="390" y="60" width="70" height="50" rx="8" fill="#44a340"/>
+          <text x="425" y="82" text-anchor="middle" class="svg-text" font-size="11" fill="#0a0c10">Top-3</text>
+          <text x="425" y="98" text-anchor="middle" class="svg-text-sm" font-size="9" fill="#0a0c10">+scores</text>
+
+          <!-- Vendor table -->
+          <rect x="20" y="140" width="440" height="135" rx="8" fill="#0a0c10" stroke="#5a6175"/>
+          <text x="240" y="160" text-anchor="middle" class="svg-text" fill="#ffde00" font-size="12">Vendor snapshot (2025)</text>
+          <g font-family="JetBrains Mono" font-size="10" fill="#c8ccd6">
+            <text x="35" y="182">Cohere</text>    <text x="150" y="182">rerank-v3.5</text>    <text x="275" y="182">multilingual</text>  <text x="395" y="182" fill="#66bb6a">$1/1k q</text>
+            <text x="35" y="202">Jina AI</text>   <text x="150" y="202">jina-reranker-v2</text> <text x="275" y="202">8k context</text>     <text x="395" y="202" fill="#66bb6a">$0.7/1k q</text>
+            <text x="35" y="222">Mixedbread</text><text x="150" y="222">mxbai-rerank-v2</text>  <text x="275" y="222">SOTA OSS</text>       <text x="395" y="222" fill="#66bb6a">self-host</text>
+            <text x="35" y="242">Voyage</text>    <text x="150" y="242">rerank-2</text>         <text x="275" y="242">long context</text>   <text x="395" y="242" fill="#66bb6a">$0.05/1k</text>
+            <text x="35" y="262">FlashRank</text> <text x="150" y="262">rank-T5-flan</text>     <text x="275" y="262">CPU, sub-50ms</text>  <text x="395" y="262" fill="#66bb6a">free OSS</text>
+          </g>
+        </svg>
+      </div>
+      <div class="panel-info">
+        <h3>API &amp; lightweight rerankers — production defaults</h3>
+        <p class="tagline">Managed reranker APIs (Cohere, Jina, Voyage, Mixedbread) and the lightweight FlashRank library cover 80% of real RAG deployments.</p>
+        <ul class="bullets">
+          <li><strong>Cohere Rerank v3.5</strong> — the de-facto enterprise default. Multilingual, one HTTP call, integrates natively with LangChain's <code>ContextualCompressionRetriever</code>.</li>
+          <li><strong>FlashRank</strong> — distilled rank-T5 in a 4 MB Python package. Runs on CPU at sub-50 ms for top-20 — ideal for chatbots and edge.</li>
+          <li><strong>Jina &amp; Voyage</strong> — long-context (8k+ tokens per doc) for technical / scientific corpora.</li>
+          <li><strong>Mixedbread mxbai-rerank-v2</strong> — open-source SOTA on the BEIR benchmark, self-hostable.</li>
+        </ul>
+        <div class="meta-row">
+          <div class="meta-card use">
+            <h5>Best for</h5>
+            <ul>
+              <li>You want "just add reranking" with one line of code</li>
+              <li>Multilingual or domain-specific traffic</li>
+              <li>No GPU available locally (FlashRank is CPU-only)</li>
+            </ul>
+          </div>
+          <div class="meta-card avoid">
+            <h5>Weak at</h5>
+            <ul>
+              <li>Air-gapped / on-prem only environments (API)</li>
+              <li>Extreme cost optimization at high QPS</li>
+            </ul>
+          </div>
+        </div>
+        <div class="usecase">
+          <div class="uc-label">Reproducible benchmark</div>
+          <div class="uc-title">~23% lower latency with a tighter, more on-point answer</div>
+          <p>A published walk-through on a several-hundred-chunk study corpus replaced a plain vector retriever with a Cohere-rerank wrapper, trimming the LLM-facing context from twenty passages down to three. End-to-end query time dropped from roughly 3.15 s to 2.42 s, and the generated answer was visibly tighter — fewer hedges, fewer off-topic asides.</p>
+        </div>
+<pre class="code-block"><span class="kw">from</span> langchain.retrievers <span class="kw">import</span> ContextualCompressionRetriever
+<span class="kw">from</span> langchain.retrievers.document_compressors <span class="kw">import</span> CohereRerank
+
+base = vectorstore.<span class="fn">as_retriever</span>(search_kwargs={<span class="str">"k"</span>: <span class="num">20</span>})
+compressor = <span class="fn">CohereRerank</span>(model=<span class="str">"rerank-v3.5"</span>, top_n=<span class="num">3</span>)
+retriever = <span class="fn">ContextualCompressionRetriever</span>(
+    base_compressor=compressor,
+    base_retriever=base,
+)
+docs = retriever.<span class="fn">get_relevant_documents</span>(query)   <span class="cm"># 3 reranked docs</span>
+
+<span class="cm"># --- or FlashRank for zero-API, sub-50ms reranking ---</span>
+<span class="kw">from</span> flashrank <span class="kw">import</span> Ranker, RerankRequest
+ranker = <span class="fn">Ranker</span>(model_name=<span class="str">"rank-T5-flan"</span>)
+top3 = ranker.<span class="fn">rerank</span>(<span class="fn">RerankRequest</span>(query=query, passages=top20))[:<span class="num">3</span>]</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Reranker comparison table -->
+<section class="fade-in">
+  <h3>Picking a reranker — the cheat-sheet</h3>
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Reranker</th>
+          <th>Latency (top-20)</th>
+          <th>Quality</th>
+          <th>Cost</th>
+          <th>Setup</th>
+          <th>Pick when…</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>BM25</td>
+          <td><span class="badge green">~5 ms</span></td>
+          <td><span class="badge yellow">good</span></td>
+          <td><span class="badge green">free</span></td>
+          <td><span class="badge green">trivial</span></td>
+          <td>Keyword-heavy queries, edge devices</td>
+        </tr>
+        <tr>
+          <td>Cross-Encoder (MiniLM)</td>
+          <td><span class="badge yellow">~150 ms</span></td>
+          <td><span class="badge green">excellent</span></td>
+          <td><span class="badge green">free</span></td>
+          <td><span class="badge yellow">needs GPU at scale</span></td>
+          <td>Self-hosted high-quality RAG</td>
+        </tr>
+        <tr>
+          <td>ColBERT / Multi-vector</td>
+          <td><span class="badge green">~50 ms</span></td>
+          <td><span class="badge green">excellent</span></td>
+          <td><span class="badge yellow">storage-heavy</span></td>
+          <td><span class="badge yellow">moderate</span></td>
+          <td>End-to-end (no separate retriever needed)</td>
+        </tr>
+        <tr>
+          <td>LLM-as-Judge (GPT-4)</td>
+          <td><span class="badge red">~2–6 s</span></td>
+          <td><span class="badge green">SOTA</span></td>
+          <td><span class="badge red">$$$</span></td>
+          <td><span class="badge green">just prompt</span></td>
+          <td>Eval / offline labelling / low QPS</td>
+        </tr>
+        <tr>
+          <td>Cohere Rerank API</td>
+          <td><span class="badge yellow">~200 ms</span></td>
+          <td><span class="badge green">excellent</span></td>
+          <td><span class="badge yellow">$1/1k</span></td>
+          <td><span class="badge green">1 line</span></td>
+          <td>Production default, multilingual</td>
+        </tr>
+        <tr>
+          <td>FlashRank (rank-T5)</td>
+          <td><span class="badge green">~40 ms CPU</span></td>
+          <td><span class="badge yellow">very good</span></td>
+          <td><span class="badge green">free</span></td>
+          <td><span class="badge green">pip install</span></td>
+          <td>Chatbots, edge, no GPU</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="usecase" style="margin-top:1.5rem;">
+    <div class="uc-label">The decision tree in one sentence</div>
+    <div class="uc-title">FlashRank for chat · Cohere for prod · Cross-encoder for self-hosted quality · LLM-as-judge for offline eval.</div>
+    <p>Almost every production RAG team starts with Cohere's managed API to prove value, then graduates to a self-hosted <code>bge-reranker-base</code> cross-encoder once cost/latency matters. Use LLM-as-judge to <em>label</em> a few thousand queries, then distill those labels into the cheap cross-encoder you actually serve.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 08 — REAL-WORLD USE CASES
+============================================================ -->
+<div class="section-divider fade-in" id="apps">
+  <div class="section-number">08</div>
+  <h2>Where Simple RAG ships every day</h2>
+  <p>Strip the jargon — these are products you've probably used this week. Each is "just" Simple RAG
+  with one or two flavors layered on.</p>
+</div>
+
+<section class="fade-in">
+  <div class="uc-grid">
+    <div class="uc-card">
+      <div class="uc-icon">💬</div>
+      <h4>Customer support bots</h4>
+      <p>Ingest help-center articles + past tickets. Retrieve top-3 → LLM answers with citations + suggests escalation when retrieval is empty.</p>
+      <div class="tags"><span class="tag">Naive</span><span class="tag">Hybrid</span></div>
+      <span class="uc-real"><strong>In production:</strong> Intercom Fin, Zendesk AI, Salesforce Einstein</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">💻</div>
+      <h4>Code search &amp; pair programming</h4>
+      <p>Chunk by function. Index repo + dependencies. Query: "where do we validate JWTs?" → relevant 5 files, then chat about them.</p>
+      <div class="tags"><span class="tag">Hybrid</span><span class="tag">Hierarchical</span></div>
+      <span class="uc-real"><strong>In production:</strong> GitHub Copilot Chat, Sourcegraph Cody, Cursor</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">⚖</div>
+      <h4>Legal &amp; contract Q&amp;A</h4>
+      <p>Index case law, contracts, regulations hierarchically. Every answer cites case number + paragraph.</p>
+      <div class="tags"><span class="tag">Hierarchical</span><span class="tag">Hybrid</span></div>
+      <span class="uc-real"><strong>In production:</strong> Harvey AI, Spellbook, LawGlance</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🩺</div>
+      <h4>Clinical decision support</h4>
+      <p>Ingest medical guidelines, drug interactions, patient EHR notes. Reference-based RAG keeps PHI in source-of-truth EHR, vector DB sees only embeddings.</p>
+      <div class="tags"><span class="tag">Reference-based</span><span class="tag">Hierarchical</span></div>
+      <span class="uc-real"><strong>In production:</strong> Glass Health, Hippocratic AI, Microsoft DAX</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🛒</div>
+      <h4>Product discovery / e-commerce</h4>
+      <p>Embed product descriptions + reviews. "I need a waterproof hiking backpack under $100" → semantic + structured filter combined.</p>
+      <div class="tags"><span class="tag">Hybrid</span><span class="tag">Naive</span></div>
+      <span class="uc-real"><strong>In production:</strong> Shopify Sidekick, Amazon Rufus, Mercari</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">📚</div>
+      <h4>Internal knowledge / wiki Q&amp;A</h4>
+      <p>Index Confluence, Notion, Google Docs. Single chat answers "What's our PTO policy?" "How do we set up VPN?" with source links.</p>
+      <div class="tags"><span class="tag">Naive</span><span class="tag">Reference-based</span></div>
+      <span class="uc-real"><strong>In production:</strong> Glean, Notion AI, Microsoft 365 Copilot</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🔬</div>
+      <h4>Academic research assistants</h4>
+      <p>Index millions of papers. HyDE handles short queries like "ResNet skip connections" → drafts a hypothesis → finds matching long-form abstracts.</p>
+      <div class="tags"><span class="tag">HyDE</span><span class="tag">Hierarchical</span></div>
+      <span class="uc-real"><strong>In production:</strong> Elicit, scite, Consensus, Semantic Scholar</span>
+    </div>
+    <div class="uc-card">
+      <div class="uc-icon">🌐</div>
+      <h4>Search-augmented chat</h4>
+      <p>Live-fetch web results → chunk on the fly → embed → answer with sources. The query path runs in &lt; 3 seconds.</p>
+      <div class="tags"><span class="tag">Naive</span><span class="tag">HyDE</span></div>
+      <span class="uc-real"><strong>In production:</strong> Perplexity, ChatGPT Browse, Phind, You.com</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 09 — WORKED EXAMPLE (end-to-end trace)
+============================================================ -->
+<div class="section-divider fade-in" id="example">
+  <div class="section-number">09</div>
+  <h2>Worked Example — a real query, end to end</h2>
+  <p>One concrete trace beats ten diagrams. Below we walk a single user query
+  <em>"What organelle produces energy in human cells?"</em> through every stage of a
+  Naive RAG pipeline indexed over a biology textbook.</p>
+</div>
+
+<section class="fade-in">
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Load &amp; chunk the textbook</h4>
+        <p>The PDF is parsed by PyMuPDF, stripped of headers and figure captions, and split with sliding-window chunking (size = 512 tokens, overlap = 64).</p>
+        <div class="step-detail">
+<span class="lbl">Input:</span>  textbook.pdf · 412 pages · ~280k tokens
+<span class="lbl">Output:</span> <span class="out">617 chunks</span> stored as {chunk_id, text, page, vector_pending}
+<span class="lbl">Sample chunk #142:</span> "Mitochondria are membrane-bound organelles found in most
+eukaryotic cells. They generate the majority of the cell's supply of adenosine
+triphosphate (ATP), used as a source of chemical energy. The number of
+mitochondria varies widely by organism, tissue, and cell type…"</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>Embed every chunk (offline, one time)</h4>
+        <p>Each chunk passes through <code>all-MiniLM-L6-v2</code>, producing a 384-dim float vector. Vectors + chunk text + page numbers are written to Qdrant.</p>
+        <div class="step-detail">
+<span class="lbl">Model:</span>  all-MiniLM-L6-v2 (80 MB, runs on CPU)
+<span class="lbl">Throughput:</span> ~1,200 chunks/sec on a laptop
+<span class="lbl">Output:</span> <span class="out">617 × 384 = 236,928 floats</span> → 924 KB index
+<span class="lbl">Chunk #142 vector (first 8 of 384 dims):</span>
+  [ 0.082, -0.341,  0.671, -0.124,  0.029,  0.488, -0.205,  0.137, … ]</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>User asks a question</h4>
+        <p>Live request hits the API. The query is sent through the <em>same</em> embedding model.</p>
+        <div class="step-detail">
+<span class="lbl">Raw query:</span> "What organelle produces energy in human cells?"
+<span class="lbl">Tokenized:</span> ['what', 'organ', '##elle', 'produces', 'energy', 'in', 'human', 'cells', '?']  → 9 tokens
+<span class="lbl">Query vector (first 8 dims):</span>
+  [ 0.094, -0.328,  0.652, -0.103,  0.041,  0.502, -0.198,  0.144, … ]
+<span class="lbl">Latency:</span> <span class="out">28 ms</span> (CPU embedding)</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h4>Top-K vector search</h4>
+        <p>Qdrant's HNSW index returns the 5 closest chunks by cosine similarity. Notice the top hit shares zero words with the query — pure semantic match.</p>
+        <div class="step-detail">
+<span class="lbl">Search latency:</span> <span class="out">8 ms</span> across 617 vectors (HNSW)
+
+<span class="lbl">Top-5 results (cosine similarity):</span>
+  <span class="out">1. chunk #142  (sim=0.892)</span>  p. 87 — "Mitochondria are membrane-bound organelles…"
+  2. chunk #144  (sim=0.811)  p. 88 — "ATP synthase complex pumps protons across…"
+  3. chunk #098  (sim=0.704)  p. 61 — "Cellular respiration occurs in three stages…"
+  4. chunk #207  (sim=0.687)  p. 126 — "Plant cells also contain chloroplasts which…"
+  5. chunk #143  (sim=0.643)  p. 87 — "Cristae are the inward folds of the inner…"</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <h4>Augment the prompt</h4>
+        <p>The top chunks are stitched into a strict prompt template that grounds the LLM and demands citations.</p>
+        <div class="step-detail">
+<span class="lbl">Final prompt sent to GPT-4:</span>
+You are a biology assistant. Answer ONLY from the context below.
+If the answer isn't in the context, say "I don't know".
+Cite the page number of each fact in parentheses.
+
+CONTEXT:
+[1] (p.87) Mitochondria are membrane-bound organelles found in most
+    eukaryotic cells. They generate the majority of the cell's supply
+    of adenosine triphosphate (ATP), used as a source of chemical energy…
+[2] (p.88) ATP synthase complex pumps protons across the inner membrane…
+[3] (p.61) Cellular respiration occurs in three stages: glycolysis,
+    citric acid cycle, and the electron transport chain…
+
+QUESTION: What organelle produces energy in human cells?
+
+ANSWER:
+<span class="lbl">Total prompt size:</span> <span class="out">~720 tokens</span> (well under the 8k window)</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div>
+        <h4>LLM generates the grounded answer</h4>
+        <p>GPT-4 reads the context, ignores its priors, and returns a citation-rich answer in plain English.</p>
+        <div class="step-detail">
+<span class="lbl">Generation latency:</span> <span class="out">1.1 s</span>
+<span class="lbl">Output tokens:</span> 48
+
+<span class="out">▶ "Mitochondria are the organelles that produce energy in human cells.</span>
+<span class="out">   They generate ATP, the cell's main chemical energy currency, through</span>
+<span class="out">   cellular respiration (p. 61, p. 87). ATP synthase pumps protons across</span>
+<span class="out">   the inner mitochondrial membrane to drive ATP production (p. 88)."</span>
+
+<span class="lbl">End-to-end query latency:</span> <span class="out">28 + 8 + 1100 ≈ 1.14 s</span>
+<span class="lbl">Cost per query (GPT-4o):</span> ~$0.0027 in + $0.0010 out = <span class="out">~$0.004</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">What just happened</div>
+    <div class="uc-title">An LLM with a 2023 knowledge cutoff just answered with citations from your private PDF — in 1.1 seconds, for less than half a cent.</div>
+    <p>No fine-tuning, no model weights changed. The textbook could be replaced tomorrow with a 2026 edition and the same answer machine would cite the new pages. That is the magic of Simple RAG.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 10 — PITFALLS
+============================================================ -->
+<div class="section-divider fade-in" id="pitfalls">
+  <div class="section-number">10</div>
+  <h2>Production Pitfalls</h2>
+  <p>The pipeline looks tidy on a slide. In production, here's where it actually breaks.</p>
+</div>
+
+<section class="fade-in">
+  <div class="pitfall-grid">
+    <div class="pitfall">
+      <h4>Mismatched tokenizer/model between ingest &amp; query</h4>
+      <p>You embedded the corpus with <code>bge-small</code> but at query time you call <code>ada-002</code>. Vectors live in two unrelated spaces — recall collapses to ~5%.</p>
+      <span class="fix"><strong>Fix:</strong> pin the model name + version in config; re-embed everything if you change.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Forgetting to store the original text</h4>
+      <p>Embeddings are <strong>not reversible</strong>. If your vector DB only holds vectors, you can't show the chunk to the LLM — only its ID.</p>
+      <span class="fix"><strong>Fix:</strong> always store <code>{id, vector, text, source_uri, page}</code> together — or use Reference-based RAG with stable offsets.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Chunk too big &gt; embedding model's max</h4>
+      <p>Most sentence embedding models silently truncate at 512 tokens. A 2000-token chunk becomes a 512-token chunk with no warning, and 75% of the content has zero influence on the vector.</p>
+      <span class="fix"><strong>Fix:</strong> check <code>model.max_seq_length</code> and size chunks ≤ that, with overlap to preserve context.</span>
+    </div>
+    <div class="pitfall">
+      <h4>No "I don't know" path</h4>
+      <p>When retrieval returns junk, the LLM happily makes something up. Worse: it sounds confident.</p>
+      <span class="fix"><strong>Fix:</strong> threshold on similarity score. If top-1 &lt; 0.5, return "I couldn't find a reliable source." Bake into the prompt: <em>"answer ONLY from context."</em></span>
+    </div>
+    <div class="pitfall">
+      <h4>Trying to pass embeddings to the LLM</h4>
+      <p>You can't. An LLM accepts tokens, not 384 floats. The vector is just an index key — you must look up the human-readable text and put <em>that</em> in the prompt.</p>
+      <span class="fix"><strong>Fix:</strong> retrieve <code>top_k.text</code>, not <code>top_k.vector</code>, into the prompt.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Ignoring stale or duplicated chunks</h4>
+      <p>Re-ingesting the same wiki page nightly without dedupe → 30 near-identical chunks crowd the top-K. The LLM sees one fact six times, costs go up 6×, novelty drops to zero.</p>
+      <span class="fix"><strong>Fix:</strong> content-hash each chunk; upsert by hash. Diff against the previous run before reindexing.</span>
+    </div>
+    <div class="pitfall">
+      <h4>No reranking when K is small</h4>
+      <p>Vector search ranks by cosine, which is a coarse signal. A cross-encoder reranker (e.g. <code>bge-reranker-base</code>) on the top-20 can push your top-3 precision from 70% → 90%.</p>
+      <span class="fix"><strong>Fix:</strong> retrieve K=20 by vector, rerank to K=3 with a cross-encoder before sending to LLM.</span>
+    </div>
+    <div class="pitfall">
+      <h4>Stuffing too much context into the prompt</h4>
+      <p>More context ≠ better answers. LLMs suffer from "lost in the middle" — facts buried at prompt position 8/10 get ignored. Token cost goes up linearly; quality often drops.</p>
+      <span class="fix"><strong>Fix:</strong> keep K ≤ 5, put the most relevant chunk first, and trim each chunk to its most relevant ~200 tokens.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p><strong>RAG (Zero to Hero) — A Visual Deep Dive</strong> · companion to <a href="agentic-rag-zero-to-hero.html">Agentic RAG</a>.</p>
+</footer>
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script>
+// Scroll progress bar
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  progressBar.style.width = pct + '%';
+});
+
+// Fade-in on scroll
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
+
+// Generic tab handler: works for all .tabstrip groups via data-tab/data-panel
+document.querySelectorAll('section[data-tab-group]').forEach(section => {
+  const btns = section.querySelectorAll('.tab-btn');
+  const panels = section.querySelectorAll('.tab-panel');
+  const activate = (key) => {
+    btns.forEach(b => b.classList.toggle('active', b.dataset.tab === key));
+    panels.forEach(p => p.classList.toggle('active', p.dataset.panel === key));
+  };
+  btns.forEach((b, i) => {
+    b.addEventListener('click', () => activate(b.dataset.tab));
+    b.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const next = (i + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length;
+      btns[next].focus();
+      activate(btns[next].dataset.tab);
+    });
+  });
+});
+
+// Nav active link as you scroll
+const navLinks = document.querySelectorAll('nav .nav-links a');
+const sectionIds = ['why','pipeline','embed','chunk','types','vdb','rerank','apps','example','pitfalls'];
+window.addEventListener('scroll', () => {
+  let current = sectionIds[0];
+  sectionIds.forEach(id => {
+    const el = document.querySelector(`#${id}`) ||
+               [...document.querySelectorAll('.section-divider')].find(d => d.querySelector('h2')?.innerText.toLowerCase().includes(id));
+    // fallback: use section-divider position
+  });
+  // Lightweight: highlight by visible section-divider
+  const dividers = document.querySelectorAll('.section-divider');
+  let activeIdx = -1;
+  dividers.forEach((d, i) => {
+    const r = d.getBoundingClientRect();
+    if (r.top < 200) activeIdx = i;
+  });
+  navLinks.forEach((a, i) => a.classList.toggle('active', i === activeIdx));
+});
+</script>
+
+</body>
+</html>
