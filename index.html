@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI · ML · RAG · MCP · Agentic RAG — Zero to Hero Hub</title>
+
+<!-- SEO -->
+<meta name="description" content="A beginner-to-hero learning hub for modern AI: machine learning fundamentals, Retrieval-Augmented Generation (RAG), the Model Context Protocol (MCP), and Agentic RAG. Three visual decks, one guided path, zero maths required.">
+<meta name="keywords" content="AI, ML, machine learning, RAG, retrieval augmented generation, MCP, model context protocol, agentic RAG, LLM, AI agents, beginner AI tutorial">
+<meta name="author" content="Zero-to-Hero Hub">
+<meta name="theme-color" content="#0a0c10">
+
+<!-- Open Graph / social share -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="AI · ML · RAG · MCP · Agentic RAG — Zero to Hero Hub">
+<meta property="og:description" content="A beginner-to-hero learning hub for modern AI: ML fundamentals, RAG, MCP, and Agentic RAG. Three visual decks, one guided path.">
+<meta property="og:site_name" content="Zero-to-Hero Hub">
+
+<!-- Twitter card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI · ML · RAG · MCP · Agentic RAG — Zero to Hero Hub">
+<meta name="twitter:description" content="Three visual decks. One guided path. From zero to hero on modern AI — no maths required.">
+
+<!-- Inline SVG favicon (no extra file needed for GitHub Pages) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0c10'/%3E%3Ccircle cx='50' cy='50' r='18' fill='none' stroke='%23ffde00' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%2344a340'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --jd-green: #378b29;
+  --jd-green-bright: #44a340;
+  --yellow: #ffde00;
+  --yellow-soft: #fff3b0;
+  --bg: #0a0c10;
+  --bg-elevated: #12151c;
+  --bg-card: #181c26;
+  --bg-card-hover: #1e2336;
+  --text: #ffffff;
+  --text-muted: #c8ccd6;
+  --text-dim: #8b92a8;
+  --accent: #4fc3f7;
+  --accent2: #ab47bc;
+  --accent3: #ff7043;
+  --danger: #ef5350;
+  --success: #66bb6a;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-glow: 0 0 40px rgba(255,222,0,0.2);
+  --font: 'Inter', -apple-system, sans-serif;
+  --display: 'Space Grotesk', 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; font-size: 17px; overflow-x: hidden; }
+
+/* ===== NAV & PROGRESS ===== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(10,12,16,0.85); backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border); padding: 0 2.5rem; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+nav .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.95rem; color: var(--yellow); font-family: var(--display); flex-shrink: 0; }
+nav .brand svg { width: 26px; height: 26px; }
+nav .nav-links {
+  display: flex; gap: 2px; list-style: none;
+  flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; -ms-overflow-style: none;
+  max-width: 100%;
+}
+nav .nav-links::-webkit-scrollbar { display: none; }
+nav .nav-links li { flex-shrink: 0; }
+nav .nav-links a {
+  color: var(--text-muted); text-decoration: none;
+  padding: 8px 14px; border-radius: 8px;
+  font-size: 0.8rem; font-weight: 500; transition: var(--transition);
+  white-space: nowrap;
+}
+nav .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+nav .nav-links a.active { color: var(--yellow); background: rgba(255,222,0,0.12); }
+.progress-bar {
+  position: fixed; top: 64px; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--jd-green-bright), var(--yellow));
+  z-index: 1001; transition: width 0.15s; box-shadow: 0 0 12px rgba(255,222,0,0.5);
+}
+
+/* ===== LAYOUT ===== */
+section { max-width: 1140px; margin: 0 auto; padding: 3rem; text-align: left; }
+.section-divider { max-width: 1140px; margin: 0 auto; padding: 4rem 3rem 2rem; }
+.section-divider .section-number {
+  font-size: 6rem; font-weight: 900; color: var(--yellow);
+  opacity: 0.85; line-height: 1; letter-spacing: -0.04em; font-family: var(--display);
+}
+.section-divider h2 {
+  font-size: 3.5rem; font-weight: 900; margin-top: 0.25rem;
+  letter-spacing: -0.03em; color: var(--jd-green-bright); font-family: var(--display);
+}
+.section-divider p { color: var(--text-muted); font-size: 1.15rem; max-width: 760px; margin-top: 1rem; }
+
+h1, h2, h3, h4 { font-family: var(--display); }
+h1 { font-size: 3.5rem; font-weight: 700; line-height: 1.05; color: var(--jd-green-bright); }
+h2 { font-size: 2.8rem; font-weight: 700; color: var(--jd-green-bright); }
+h3 { font-size: 1.5rem; font-weight: 700; color: var(--jd-green-bright); margin-top: 1.5rem; }
+h4 { font-size: 1.15rem; font-weight: 600; color: var(--text); }
+
+.subtitle { color: var(--text-muted); font-size: 1.2rem; margin-top: 0.75rem; max-width: 760px; }
+code { font-family: var(--mono); color: var(--yellow); font-size: 0.9em; }
+
+/* ===== HERO ===== */
+.hero {
+  min-height: 80vh; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
+  padding: 6rem 3rem; max-width: 1140px; margin: 0 auto; position: relative;
+}
+.hero::before {
+  content: ''; position: fixed; top: -30%; right: -20%;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(255,222,0,0.06) 0%, transparent 60%);
+  animation: heroPulse 10s ease-in-out infinite; pointer-events: none;
+}
+.hero::after {
+  content: ''; position: fixed; bottom: -20%; left: -10%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(68,163,64,0.05) 0%, transparent 60%);
+  animation: heroPulse 12s ease-in-out infinite reverse; pointer-events: none;
+}
+@keyframes heroPulse { 0%,100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.15); opacity: 1; } }
+.hero h1 {
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  background: linear-gradient(135deg, var(--jd-green-bright) 0%, var(--yellow) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: -0.04em; line-height: 1;
+}
+.hero h1 .h1-sub {
+  display: inline-block; font-size: 0.32em; font-weight: 500;
+  letter-spacing: 0.02em; vertical-align: middle; margin-left: 0.4em;
+  -webkit-text-fill-color: var(--text-muted); background: none; opacity: 0.95;
+}
+.hero .subtitle { font-size: 1.35rem; max-width: 760px; margin-top: 1.25rem; }
+.hero .cta-row { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+.cta {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.9rem 1.5rem; border-radius: 10px;
+  font-family: var(--display); font-weight: 600; font-size: 0.95rem;
+  text-decoration: none; transition: var(--transition);
+}
+.cta.primary {
+  background: linear-gradient(135deg, var(--jd-green-bright), var(--yellow));
+  color: #0a0c10; box-shadow: 0 4px 18px rgba(255,222,0,0.25);
+}
+.cta.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,222,0,0.4); }
+.cta.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.cta.ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+
+.session-info { display: flex; gap: 1.25rem; margin-top: 3rem; flex-wrap: wrap; }
+.session-stat {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.3rem 1.8rem; text-align: center;
+  box-shadow: var(--shadow-card); transition: var(--transition);
+}
+.session-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.5), var(--shadow-glow); }
+.session-stat .number { font-size: 2rem; font-weight: 900; color: var(--yellow); font-family: var(--display); line-height: 1; }
+.session-stat .label { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ===== PRIMITIVE / CONCEPT CARDS ===== */
+.prim-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem; margin: 2rem 0;
+}
+.prim-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem 1.6rem;
+  position: relative; transition: var(--transition);
+}
+.prim-card:hover { transform: translateY(-3px); border-color: rgba(255,222,0,0.3); box-shadow: 0 12px 36px rgba(0,0,0,0.5); }
+.prim-card.resource { border-top: 3px solid var(--accent); }
+.prim-card.tool { border-top: 3px solid var(--jd-green-bright); }
+.prim-card.prompt { border-top: 3px solid var(--accent2); }
+.prim-card.warn { border-top: 3px solid var(--accent3); }
+.prim-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.prim-card h4 { font-size: 1.1rem; margin-bottom: 0.3rem; color: var(--text); }
+.prim-sub { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.7rem; }
+.prim-card p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; }
+
+/* ===== COMPARISON CARDS ===== */
+.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0 3rem; }
+@media (max-width: 900px) { .cmp-grid { grid-template-columns: 1fr; } }
+.cmp-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.6rem 1.7rem; }
+.cmp-card.bad { border-left: 3px solid var(--danger); }
+.cmp-card.good { border-left: 3px solid var(--success); }
+.cmp-card h4 { font-size: 1.05rem; margin-bottom: 0.6rem; letter-spacing: 0.4px; }
+.cmp-card.bad h4 { color: var(--danger); }
+.cmp-card.good h4 { color: var(--success); }
+.cmp-card .icon { font-size: 1.4rem; margin-right: 0.4rem; }
+.cmp-card ul { list-style: none; margin-top: 0.6rem; }
+.cmp-card li { padding: 0.4rem 0 0.4rem 1.4rem; position: relative; font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; }
+.cmp-card.bad li::before { content: '✗'; color: var(--danger); position: absolute; left: 0; font-weight: 700; }
+.cmp-card.good li::before { content: '✓'; color: var(--success); position: absolute; left: 0; font-weight: 700; }
+
+/* ===== LEARNING-PATH TIMELINE ===== */
+.path-timeline {
+  position: relative; padding: 2rem 0 1rem 0;
+  margin: 2rem 0;
+}
+.path-timeline::before {
+  content: ''; position: absolute; left: 22px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(180deg, var(--jd-green-bright), var(--yellow));
+  opacity: 0.5;
+}
+.path-step {
+  display: grid; grid-template-columns: 60px 1fr; gap: 1.2rem;
+  position: relative; margin-bottom: 1.5rem;
+}
+.path-step .dot {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg-card); border: 2px solid var(--yellow);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-weight: 800; color: var(--yellow);
+  font-size: 1.1rem; z-index: 2; box-shadow: 0 0 16px rgba(255,222,0,0.2);
+}
+.path-step .body {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.1rem 1.3rem;
+}
+.path-step .body h4 { color: var(--yellow); font-size: 1.05rem; margin-bottom: 0.3rem; }
+.path-step .body p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.55; }
+.path-step .body .badge-row { display: flex; gap: 0.4rem; margin-top: 0.6rem; flex-wrap: wrap; }
+
+/* ===== DECK TILES ===== */
+.deck-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.4rem; margin: 2rem 0; }
+.deck-tile {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1.8rem 1.7rem;
+  display: flex; flex-direction: column;
+  transition: var(--transition); text-decoration: none; color: inherit;
+  position: relative; overflow: hidden;
+}
+.deck-tile::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--jd-green-bright), var(--yellow));
+  opacity: 0.8;
+}
+.deck-tile:hover {
+  transform: translateY(-4px); border-color: var(--yellow);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55), var(--shadow-glow);
+}
+.deck-tile .deck-num { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; }
+.deck-tile h3 { color: var(--yellow); margin-top: 0.4rem; margin-bottom: 0.4rem; font-size: 1.6rem; }
+.deck-tile .tagline { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem; }
+.deck-tile .deck-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.deck-tile .meta-pill {
+  background: rgba(255,222,0,0.08); color: var(--yellow);
+  font-family: var(--mono); font-size: 0.7rem;
+  padding: 3px 9px; border-radius: 4px;
+}
+.deck-tile ul.section-list {
+  list-style: none; margin: 0.8rem 0 1.2rem;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 0.8rem;
+}
+.deck-tile ul.section-list li { font-size: 0.82rem; }
+.deck-tile ul.section-list a {
+  color: var(--text-muted); text-decoration: none;
+  display: block; padding: 4px 0 4px 14px; position: relative;
+  border-radius: 4px; transition: color 0.2s, background 0.2s;
+}
+.deck-tile ul.section-list a::before {
+  content: '▸'; color: var(--jd-green-bright); position: absolute; left: 0; font-weight: 700; font-size: 0.7rem; top: 5px;
+}
+.deck-tile ul.section-list a:hover { color: var(--yellow); }
+.deck-tile .open-btn {
+  margin-top: auto; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,222,0,0.12); color: var(--yellow);
+  border: 1px solid rgba(255,222,0,0.3);
+  padding: 0.55rem 1rem; border-radius: 8px;
+  font-family: var(--display); font-weight: 600; font-size: 0.85rem;
+  text-decoration: none; transition: var(--transition);
+}
+.deck-tile .open-btn:hover { background: var(--yellow); color: #0a0c10; }
+@media (max-width: 600px) { .deck-tile ul.section-list { grid-template-columns: 1fr; } }
+
+/* ===== USECASE CALLOUT ===== */
+.usecase {
+  background: linear-gradient(135deg, rgba(68,163,64,0.08), rgba(255,222,0,0.05));
+  border: 1px solid rgba(255,222,0,0.2); border-radius: 10px;
+  padding: 1rem 1.2rem; margin: 1rem 0;
+}
+.usecase .uc-label { font-family: var(--mono); font-size: 0.7rem; color: var(--yellow); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+.usecase .uc-title { font-family: var(--display); font-weight: 700; color: var(--text); font-size: 1.05rem; margin-bottom: 0.3rem; }
+.usecase p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.55; }
+
+/* ===== GLOSSARY ===== */
+.glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 2rem 0; }
+.glossary-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 10px;
+  padding: 1rem 1.2rem;
+}
+.glossary-item h5 {
+  font-family: var(--display); color: var(--yellow);
+  font-size: 0.95rem; margin-bottom: 0.3rem;
+}
+.glossary-item h5 code { font-size: 0.75rem; color: var(--text-dim); margin-left: 0.4rem; font-weight: 400; }
+.glossary-item p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ===== FAQ ACCORDION ===== */
+.faq { margin: 1.5rem 0; }
+.faq details {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 0.7rem;
+  transition: border-color 0.2s;
+}
+.faq details[open] { border-color: rgba(255,222,0,0.3); }
+.faq summary {
+  cursor: pointer; font-family: var(--display); color: var(--text);
+  font-weight: 600; font-size: 0.95rem; list-style: none;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; color: var(--yellow); font-size: 1.3rem; font-weight: 300; transition: transform 0.2s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.7rem; line-height: 1.6; }
+
+/* ===== COMPARISON TABLE ===== */
+.cmp-table-wrap { overflow-x: auto; margin: 2rem 0; border-radius: 14px; border: 1px solid var(--border); }
+.cmp-table { width: 100%; border-collapse: collapse; background: var(--bg-card); min-width: 700px; }
+.cmp-table th, .cmp-table td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; vertical-align: top; }
+.cmp-table th { background: rgba(255,222,0,0.06); color: var(--yellow); font-family: var(--display); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.cmp-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.cmp-table td:first-child { font-weight: 600; color: var(--text); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-family: var(--mono); font-weight: 600; }
+.badge.green { background: rgba(102,187,106,0.15); color: var(--success); }
+.badge.yellow { background: rgba(255,222,0,0.15); color: var(--yellow); }
+.badge.red { background: rgba(239,83,80,0.15); color: var(--danger); }
+.badge.blue { background: rgba(79,195,247,0.15); color: var(--accent); }
+
+/* ===== FOOTER ===== */
+footer { max-width: 1140px; margin: 4rem auto 2rem; padding: 2.5rem 3rem; border-top: 1px solid var(--border); text-align: center; }
+footer p { color: var(--text-dim); font-size: 0.85rem; }
+footer a { color: var(--yellow); text-decoration: none; }
+
+/* ===== ANIMATIONS ===== */
+.fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== 14" LAPTOP (1366×768 / 1440×900) ===== */
+@media (max-width: 1280px) {
+  nav { padding: 0 1rem; height: 58px; }
+  nav .brand { font-size: 0.85rem; }
+  nav .brand svg { width: 22px; height: 22px; }
+  nav .nav-links a { padding: 6px 9px; font-size: 0.72rem; }
+  .progress-bar { top: 58px; }
+  section { padding: 2rem 1.75rem; }
+  .section-divider { padding: 2.75rem 1.75rem 1.5rem; }
+  .section-divider .section-number { font-size: 4.5rem; }
+  .section-divider h2 { font-size: 2.6rem; }
+  .section-divider p { font-size: 1.05rem; }
+  .hero { padding: 4.5rem 1.75rem; min-height: 70vh; }
+  .hero .subtitle { font-size: 1.15rem; }
+  .session-stat { padding: 1rem 1.4rem; }
+  .session-stat .number { font-size: 1.7rem; }
+  h2 { font-size: 2.2rem; }
+  h3 { font-size: 1.3rem; }
+  footer { padding: 2rem 1.75rem; }
+  .cmp-table { min-width: 600px; }
+}
+
+/* ===== TABLET / SMALL LAPTOP ===== */
+@media (max-width: 1024px) {
+  .section-divider .section-number { font-size: 3.8rem; }
+  .section-divider h2 { font-size: 2.2rem; }
+  .hero h1 { letter-spacing: -0.03em; }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  nav { padding: 0 0.75rem; }
+  nav .nav-links { display: none; }
+  section, .section-divider, .hero, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  h2 { font-size: 1.9rem; }
+  .section-divider h2 { font-size: 2rem; }
+  .section-divider .section-number { font-size: 3.2rem; }
+  .session-info { flex-direction: column; }
+  .hero { padding-top: 4rem; padding-bottom: 3rem; min-height: 60vh; }
+  .deck-tile ul.section-list { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>
+    </svg>
+    AI · ML · RAG · MCP · Agentic RAG
+  </div>
+  <ul class="nav-links">
+    <li><a href="#start">Start</a></li>
+    <li><a href="#ai-ml">AI &amp; ML</a></li>
+    <li><a href="#path">Learning Path</a></li>
+    <li><a href="#rag">RAG Deck</a></li>
+    <li><a href="#mcp">MCP Deck</a></li>
+    <li><a href="#agentic">Agentic RAG Deck</a></li>
+    <li><a href="#compare">Compare</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+</nav>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ===== HERO ===== -->
+<header class="hero" id="start">
+  <h1>Zero<span class="h1-sub">to Hero Hub</span></h1>
+  <p class="subtitle">
+    A guided tour through modern AI, from the absolute basics of machine learning
+    to the cutting edge of <strong>RAG</strong>, the <strong>Model Context Protocol (MCP)</strong>,
+    and <strong>Agentic RAG</strong>. Built for a brand-new learner — no prior ML, no maths,
+    no jargon. Three companion visual decks do the deep dives; this hub stitches them
+    into a single learning journey.
+  </p>
+  <div class="cta-row">
+    <a class="cta primary" href="#path">▶ Start the journey</a>
+    <a class="cta ghost" href="#ai-ml">What is AI?</a>
+  </div>
+  <div class="session-info">
+    <div class="session-stat"><div class="number">3</div><div class="label">Visual Decks</div></div>
+    <div class="session-stat"><div class="number">32</div><div class="label">Deep-Dive Sections</div></div>
+    <div class="session-stat"><div class="number">100%</div><div class="label">Beginner Friendly</div></div>
+    <div class="session-stat"><div class="number">0</div><div class="label">Maths Required</div></div>
+  </div>
+</header>
+
+<!-- ============================================================
+     SECTION 01 — WHAT IS AI / ML
+============================================================ -->
+<div class="section-divider fade-in" id="ai-ml">
+  <div class="section-number">01</div>
+  <h2>What is AI &amp; ML?</h2>
+  <p>The 30-second version. <strong>Artificial Intelligence</strong> is the broad idea of getting computers
+  to do things that usually need human thinking — reading, talking, deciding, recognising. <strong>Machine
+  Learning</strong> is the specific recipe that powers nearly all modern AI: instead of writing the rules by hand,
+  you show a model <em>lots of examples</em> and let it figure out the rules itself.</p>
+</div>
+
+<section class="fade-in">
+  <div class="prim-grid">
+    <div class="prim-card resource">
+      <div class="prim-icon">🧠</div>
+      <h4>Artificial Intelligence (AI)</h4>
+      <div class="prim-sub">the umbrella term</div>
+      <p>Any technique that lets machines mimic human-like behaviour — playing chess, recognising faces,
+      translating languages, writing essays. Rule-based bots, search engines, and chatbots all live under this tent.</p>
+    </div>
+    <div class="prim-card tool">
+      <div class="prim-icon">📊</div>
+      <h4>Machine Learning (ML)</h4>
+      <div class="prim-sub">learn from examples</div>
+      <p>The subset of AI where the computer is shown <em>data</em> (emails labelled spam/not-spam, photos of
+      cats and dogs) and statistically learns the pattern. No hand-written rules — the model <em>discovers</em> them.</p>
+    </div>
+    <div class="prim-card prompt">
+      <div class="prim-icon">🕸️</div>
+      <h4>Deep Learning</h4>
+      <div class="prim-sub">stacked neural networks</div>
+      <p>ML done with multi-layer neural networks. When the layers get really deep and the data really big,
+      you start to see GPT, Claude, Gemini, Llama — the <em>Large Language Models (LLMs)</em>.</p>
+    </div>
+    <div class="prim-card warn">
+      <div class="prim-icon">🗣️</div>
+      <h4>Generative AI &amp; LLMs</h4>
+      <div class="prim-sub">predict the next token</div>
+      <p>LLMs are deep neural nets trained on enormous text corpora. They <em>generate</em> by guessing the next
+      word, one token at a time. Brilliant at language — but boxed in by their training cut-off and a fixed
+      context window. That limitation is exactly what RAG, MCP, and Agentic RAG were built to break.</p>
+    </div>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">In one sentence</div>
+    <div class="uc-title">AI → ML → Deep Learning → LLMs → (RAG · MCP · Agentic RAG)</div>
+    <p>Each step is a subset of the one before. The decks in this hub focus on the final layer — making
+    LLMs useful in the real world by giving them access to your data, your tools, and the ability to act.</p>
+  </div>
+
+  <h3>The three problems LLMs alone can't solve</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card bad">
+      <h4><span class="icon">⏳</span>Stale knowledge</h4>
+      <ul>
+        <li>An LLM only knows what was in its training data</li>
+        <li>It doesn't know about events after its cut-off date</li>
+        <li>It can't see your company's internal documents</li>
+        <li>It has no clue about <em>today's</em> stock price or weather</li>
+      </ul>
+    </div>
+    <div class="cmp-card bad">
+      <h4><span class="icon">🎭</span>Hallucinations</h4>
+      <ul>
+        <li>When unsure, LLMs confidently make things up</li>
+        <li>Fake citations, invented API names, wrong numbers</li>
+        <li>Sounds perfectly fluent — and is perfectly wrong</li>
+        <li>You can't tell guess from fact without a source</li>
+      </ul>
+    </div>
+    <div class="cmp-card bad">
+      <h4><span class="icon">🧤</span>Can't take actions</h4>
+      <ul>
+        <li>A vanilla LLM only outputs text</li>
+        <li>It can't query your database, send email, file a ticket</li>
+        <li>It can't open a file, run code, or call an API</li>
+        <li>It needs <em>tools</em> wired up to do anything in the world</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🛠️</span>That's where RAG · MCP · Agentic RAG come in</h4>
+      <ul>
+        <li><strong>RAG</strong> fixes stale knowledge &amp; hallucinations by retrieving your real documents</li>
+        <li><strong>MCP</strong> standardises how LLMs talk to data sources and tools</li>
+        <li><strong>Agentic RAG</strong> lets the LLM plan, decide, and act over many steps</li>
+        <li>Each builds on the previous — read in order for the smoothest ride</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 02 — THE LEARNING PATH
+============================================================ -->
+<div class="section-divider fade-in" id="path">
+  <div class="section-number">02</div>
+  <h2>The Learning Path</h2>
+  <p>You can read the three decks in any order, but this is the path designed for someone with zero
+  background. Each step builds the vocabulary you need for the next.</p>
+</div>
+
+<section class="fade-in">
+  <div class="path-timeline">
+    <div class="path-step">
+      <div class="dot">1</div>
+      <div class="body">
+        <h4>Start with <a href="rag-zero-to-hero.html" style="color:var(--yellow);">RAG — Zero to Hero</a></h4>
+        <p>RAG (Retrieval-Augmented Generation) is the foundation. You'll learn embeddings, chunking, vector
+        databases, re-ranking, and how an LLM is grounded against real documents. Concrete and visual.</p>
+        <div class="badge-row">
+          <span class="badge yellow">≈ 30–45 min</span>
+          <span class="badge blue">10 sections</span>
+          <span class="badge green">no prerequisites</span>
+        </div>
+      </div>
+    </div>
+    <div class="path-step">
+      <div class="dot">2</div>
+      <div class="body">
+        <h4>Then read <a href="MCP-zero-to-hero.html" style="color:var(--yellow);">MCP — Zero to Hero</a></h4>
+        <p>The Model Context Protocol is the open standard (Anthropic, Nov 2024) for connecting LLMs to
+        data, tools, and prompts. Once you've seen <em>why</em> grounding matters in RAG, MCP shows you the
+        clean way to deliver that grounding at scale — the "USB-C port for AI apps".</p>
+        <div class="badge-row">
+          <span class="badge yellow">≈ 45–60 min</span>
+          <span class="badge blue">14 sections</span>
+          <span class="badge green">recommended after RAG</span>
+        </div>
+      </div>
+    </div>
+    <div class="path-step">
+      <div class="dot">3</div>
+      <div class="body">
+        <h4>Finish with <a href="agentic-rag-zero-to-hero.html" style="color:var(--yellow);">Agentic RAG — Zero to Hero</a></h4>
+        <p>Combine retrieval (RAG) with autonomous reasoning, planning, tool-use, and memory. You'll meet
+        the four agentic patterns, agentic workflows, the memory layer, and end-to-end ADW (Agentic
+        Document Workflows). This is the frontier — read it last for maximum payoff.</p>
+        <div class="badge-row">
+          <span class="badge yellow">≈ 60–75 min</span>
+          <span class="badge blue">8 sections</span>
+          <span class="badge red">advanced</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 03 — RAG DECK
+============================================================ -->
+<div class="section-divider fade-in" id="rag">
+  <div class="section-number">03</div>
+  <h2>Deck 1 — Simple RAG</h2>
+  <p>Retrieval-Augmented Generation: the foundational pattern for grounding LLMs against your own
+  documents. Jump to any section below or open the full deck.</p>
+</div>
+
+<section class="fade-in">
+  <div class="deck-grid">
+    <a class="deck-tile" href="rag-zero-to-hero.html">
+      <span class="deck-num">DECK 01 / 03</span>
+      <h3>RAG — Zero to Hero</h3>
+      <p class="tagline">Embeddings · chunking · vector DBs · hybrid search · re-ranking · production pitfalls.</p>
+      <div class="deck-meta">
+        <span class="meta-pill">10 sections</span>
+        <span class="meta-pill">~45 min</span>
+        <span class="meta-pill">beginner</span>
+      </div>
+      <ul class="section-list">
+        <li><a href="rag-zero-to-hero.html#why">01 · Why RAG exists</a></li>
+        <li><a href="rag-zero-to-hero.html#pipeline">02 · The RAG pipeline</a></li>
+        <li><a href="rag-zero-to-hero.html#embed">03 · Embeddings &amp; tokenization</a></li>
+        <li><a href="rag-zero-to-hero.html#chunk">04 · Chunking strategies</a></li>
+        <li><a href="rag-zero-to-hero.html#types">05 · Types of RAG</a></li>
+        <li><a href="rag-zero-to-hero.html#vdb">06 · Vector databases</a></li>
+        <li><a href="rag-zero-to-hero.html#rerank">07 · Re-ranking</a></li>
+        <li><a href="rag-zero-to-hero.html#apps">08 · Real-world use cases</a></li>
+        <li><a href="rag-zero-to-hero.html#example">09 · Worked example</a></li>
+        <li><a href="rag-zero-to-hero.html#pitfalls">10 · Production pitfalls</a></li>
+      </ul>
+      <span class="open-btn">Open RAG deck →</span>
+    </a>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Why start here</div>
+    <div class="uc-title">RAG is the bridge between an LLM and your data.</div>
+    <p>Before any agent can <em>reason</em> over your documents, it has to <em>find</em> them. RAG is
+    that retrieval layer. Master it first; everything that follows reuses these primitives.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 04 — MCP DECK
+============================================================ -->
+<div class="section-divider fade-in" id="mcp">
+  <div class="section-number">04</div>
+  <h2>Deck 2 — Model Context Protocol</h2>
+  <p>MCP is the open standard for plugging any AI app into any data source or tool — without bespoke
+  glue per integration. The "USB-C of AI applications".</p>
+</div>
+
+<section class="fade-in">
+  <div class="deck-grid">
+    <a class="deck-tile" href="MCP_Zero_2_hero.html">
+      <span class="deck-num">DECK 02 / 03</span>
+      <h3>MCP — Zero to Hero</h3>
+      <p class="tagline">Host · Client · Server · Tools · Resources · Prompts · WebMCP · 2026 RC.</p>
+      <div class="deck-meta">
+        <span class="meta-pill">14 sections</span>
+        <span class="meta-pill">~60 min</span>
+        <span class="meta-pill">intermediate</span>
+      </div>
+      <ul class="section-list">
+        <li><a href="MCP_Zero_2_hero.html#why">01 · Why MCP exists</a></li>
+        <li><a href="MCP_Zero_2_hero.html#what">02 · What is MCP, really?</a></li>
+        <li><a href="MCP_Zero_2_hero.html#primer">03 · Plain-English primer</a></li>
+        <li><a href="MCP_Zero_2_hero.html#vs">04 · MCP vs RAG vs Tools</a></li>
+        <li><a href="MCP_Zero_2_hero.html#arch">05 · Architecture</a></li>
+        <li><a href="MCP_Zero_2_hero.html#primitives">06 · The three primitives</a></li>
+        <li><a href="MCP_Zero_2_hero.html#client">07 · Client features</a></li>
+        <li><a href="MCP_Zero_2_hero.html#lifecycle">08 · Lifecycle &amp; messages</a></li>
+        <li><a href="MCP_Zero_2_hero.html#claude">09 · Claude Desktop demo</a></li>
+        <li><a href="MCP_Zero_2_hero.html#future">10 · Composability &amp; future</a></li>
+        <li><a href="MCP_Zero_2_hero.html#webmcp">11 · WebMCP (W3C)</a></li>
+        <li><a href="MCP_Zero_2_hero.html#security">12 · Security &amp; trust</a></li>
+        <li><a href="MCP_Zero_2_hero.html#pitfalls">13 · Production pitfalls</a></li>
+        <li><a href="MCP_Zero_2_hero.html#next">14 · 2026-07-28 RC</a></li>
+      </ul>
+      <span class="open-btn">Open MCP deck →</span>
+    </a>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Why read this second</div>
+    <div class="uc-title">MCP is the standard wiring an LLM uses to reach the outside world.</div>
+    <p>Once you understand RAG, you'll see MCP as the generalisation: not just <em>document retrieval</em>,
+    but a uniform protocol for <em>any</em> tool, dataset, or capability your model needs to use.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 05 — AGENTIC RAG DECK
+============================================================ -->
+<div class="section-divider fade-in" id="agentic">
+  <div class="section-number">05</div>
+  <h2>Deck 3 — Agentic RAG</h2>
+  <p>The frontier. Combine retrieval with autonomous planning, reflection, tool-use, memory, and
+  multi-agent collaboration. The end state of "an AI that actually gets things done".</p>
+</div>
+
+<section class="fade-in">
+  <div class="deck-grid">
+    <a class="deck-tile" href="agentic-rag-zero-to-hero.html">
+      <span class="deck-num">DECK 03 / 03</span>
+      <h3>Agentic RAG — Zero to Hero</h3>
+      <p class="tagline">Reflection · planning · tool-use · multi-agent · memory · workflows · ADW.</p>
+      <div class="deck-meta">
+        <span class="meta-pill">8 sections</span>
+        <span class="meta-pill">~75 min</span>
+        <span class="meta-pill">advanced</span>
+      </div>
+      <ul class="section-list">
+        <li><a href="agentic-rag-zero-to-hero.html#what">01 · What is Agentic RAG?</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#patterns">02 · The four agentic patterns</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#workflows">03 · Agentic workflow patterns</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#memory">04 · The memory layer</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#taxonomy">05 · Taxonomy of agentic RAG</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#compare">06 · Traditional vs Agentic vs ADW</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#apps">07 · Industry use cases</a></li>
+        <li><a href="agentic-rag-zero-to-hero.html#example">08 · Worked example — ADW</a></li>
+      </ul>
+      <span class="open-btn">Open Agentic RAG deck →</span>
+    </a>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Why read this last</div>
+    <div class="uc-title">Agentic RAG = RAG + MCP + autonomy.</div>
+    <p>Agents use RAG to <em>retrieve</em>, MCP to <em>act</em>, and a planner to <em>decide what to do next</em>.
+    The earlier decks gave you the parts; this one shows the whole machine in motion.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 06 — COMPARISON TABLE
+============================================================ -->
+<div class="section-divider fade-in" id="compare">
+  <div class="section-number">06</div>
+  <h2>How they fit together</h2>
+  <p>A side-by-side cheat sheet for the moments when you need to remember which tool solves which
+  problem.</p>
+</div>
+
+<section class="fade-in">
+  <div class="cmp-table-wrap">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Concept</th>
+          <th>What it solves</th>
+          <th>Core primitive</th>
+          <th>When you use it</th>
+          <th>Maturity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>LLM (alone)</td>
+          <td>Fluent text generation</td>
+          <td>Token prediction</td>
+          <td>Open-ended writing, casual Q&amp;A</td>
+          <td><span class="badge green">stable</span></td>
+        </tr>
+        <tr>
+          <td>RAG</td>
+          <td>Stale knowledge, hallucinations</td>
+          <td>Vector retrieval + prompt grounding</td>
+          <td>Search-then-answer over <em>your</em> docs</td>
+          <td><span class="badge green">production</span></td>
+        </tr>
+        <tr>
+          <td>MCP</td>
+          <td>Bespoke per-integration glue</td>
+          <td>JSON-RPC 2.0 standard (tools/resources/prompts)</td>
+          <td>Plugging any LLM app into any data source / tool</td>
+          <td><span class="badge yellow">new standard (Nov 2024)</span></td>
+        </tr>
+        <tr>
+          <td>Agentic RAG</td>
+          <td>Single-shot retrieval is not enough</td>
+          <td>Plan → retrieve → reflect → act → loop</td>
+          <td>Multi-step research, decision workflows, ADW</td>
+          <td><span class="badge blue">frontier</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Visual: where each layer plugs in</h3>
+  <div class="cmp-grid">
+    <div class="cmp-card good">
+      <h4><span class="icon">📚</span>Knowledge layer — <span style="color:var(--yellow)">RAG</span></h4>
+      <ul>
+        <li>Embeddings turn text into vectors</li>
+        <li>Vector DB finds the relevant chunks</li>
+        <li>Chunks are pasted into the LLM prompt as context</li>
+        <li>LLM answers with citations</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🔌</span>Connectivity layer — <span style="color:var(--yellow)">MCP</span></h4>
+      <ul>
+        <li>One protocol, one wire format (JSON-RPC 2.0)</li>
+        <li>Any client (Claude Desktop, Cursor…) talks to any server</li>
+        <li>Servers expose tools, resources, prompts</li>
+        <li>Auth, isolation, and discovery are part of the spec</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🤖</span>Reasoning layer — <span style="color:var(--yellow)">Agentic RAG</span></h4>
+      <ul>
+        <li>Plans the work, doesn't just answer one query</li>
+        <li>Decides which tools / which retrievals to call</li>
+        <li>Reflects on results and self-corrects</li>
+        <li>Maintains short and long-term memory across steps</li>
+      </ul>
+    </div>
+    <div class="cmp-card good">
+      <h4><span class="icon">🎯</span>Put together</h4>
+      <ul>
+        <li>Agentic RAG <em>uses</em> RAG to fetch knowledge</li>
+        <li>And <em>uses</em> MCP to invoke external tools</li>
+        <li>So an agent can read a contract, query a DB, file a ticket</li>
+        <li>All in one autonomous loop — that's the modern AI stack</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 07 — GLOSSARY
+============================================================ -->
+<div class="section-divider fade-in" id="glossary">
+  <div class="section-number">07</div>
+  <h2>Glossary</h2>
+  <p>Every term you'll meet across the three decks, in one place. Skim once, refer back as needed.</p>
+</div>
+
+<section class="fade-in">
+  <div class="glossary">
+    <div class="glossary-item"><h5>LLM <code>large language model</code></h5><p>Deep neural net trained on huge text corpora that predicts the next word. GPT-4, Claude, Llama, Gemini.</p></div>
+    <div class="glossary-item"><h5>Token <code>sub-word unit</code></h5><p>The atomic chunk an LLM sees — roughly ¾ of a word in English. Models have token <em>limits</em>.</p></div>
+    <div class="glossary-item"><h5>Context window</h5><p>The maximum number of tokens an LLM can read in one go. Bigger = more grounding fits in the prompt.</p></div>
+    <div class="glossary-item"><h5>Embedding</h5><p>A numeric vector representing the <em>meaning</em> of text. Similar meanings → vectors close in space.</p></div>
+    <div class="glossary-item"><h5>Vector database</h5><p>A store optimised for fast nearest-neighbour search over embedding vectors. e.g. OpenSearch k-NN, Pinecone, Weaviate.</p></div>
+    <div class="glossary-item"><h5>Chunking</h5><p>Splitting long documents into smaller passages before embedding. Bad chunking ruins retrieval.</p></div>
+    <div class="glossary-item"><h5>BM25</h5><p>Classic keyword-based ranking algorithm. Often combined with vector search → <em>hybrid</em>.</p></div>
+    <div class="glossary-item"><h5>RRF <code>reciprocal rank fusion</code></h5><p>Standard way to merge BM25 and vector result lists into one ranked list.</p></div>
+    <div class="glossary-item"><h5>Re-ranker</h5><p>Second-stage model (often a cross-encoder) that scores query↔doc pairs more accurately than the first-stage retriever.</p></div>
+    <div class="glossary-item"><h5>Cross-encoder</h5><p>Reads the query and the document <em>together</em> in one forward pass. Slow but very accurate.</p></div>
+    <div class="glossary-item"><h5>HyDE <code>hypothetical doc embeddings</code></h5><p>LLM writes a fake answer, you embed and search with <em>that</em>. Helps with short / vague queries.</p></div>
+    <div class="glossary-item"><h5>MCP host</h5><p>The AI app the user opens — Claude Desktop, Cursor, an IDE. Spawns one or more clients.</p></div>
+    <div class="glossary-item"><h5>MCP client</h5><p>A 1-to-1 connection from the host to a single server, isolated from other clients.</p></div>
+    <div class="glossary-item"><h5>MCP server</h5><p>A process that exposes one capability over the protocol (filesystem, Git, Slack, your DB…).</p></div>
+    <div class="glossary-item"><h5>Tool / Resource / Prompt</h5><p>The three primitives an MCP server can expose: callable functions, readable data, reusable prompt templates.</p></div>
+    <div class="glossary-item"><h5>JSON-RPC 2.0</h5><p>The simple request/response wire format MCP rides on. Requests, responses, and notifications.</p></div>
+    <div class="glossary-item"><h5>Agent</h5><p>An LLM wrapped in a loop that can decide what to do next, call tools, and observe results.</p></div>
+    <div class="glossary-item"><h5>Reflection</h5><p>Pattern where the agent critiques its own output and tries again. Boosts quality at the cost of latency.</p></div>
+    <div class="glossary-item"><h5>Planning</h5><p>Pattern where the agent first writes a step-by-step plan, then executes it.</p></div>
+    <div class="glossary-item"><h5>Tool use</h5><p>The agent calls external functions (search, calculator, API, code-runner) to act in the world.</p></div>
+    <div class="glossary-item"><h5>Multi-agent</h5><p>Several specialised agents collaborate — researcher, writer, critic, etc. — to solve one big task.</p></div>
+    <div class="glossary-item"><h5>Memory (working / episodic / semantic / procedural)</h5><p>Different layers an agent uses to remember context, past runs, learned facts, and how-to skills.</p></div>
+    <div class="glossary-item"><h5>ADW <code>agentic document workflow</code></h5><p>End-to-end automation of a document-driven business process (e.g. invoice approval) by a team of agents.</p></div>
+    <div class="glossary-item"><h5>Hallucination</h5><p>When an LLM confidently states something that isn't true. Grounding (RAG) + verification reduce it.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 08 — FAQ
+============================================================ -->
+<div class="section-divider fade-in" id="faq">
+  <div class="section-number">08</div>
+  <h2>Frequently asked</h2>
+  <p>The questions most beginners ask in the first hour.</p>
+</div>
+
+<section class="fade-in">
+  <div class="faq">
+    <details open>
+      <summary>Do I need to know Python or maths to read these decks?</summary>
+      <p>No. The decks include code snippets for illustration, but the explanations and visuals are
+      built so a non-coder can follow them. You only need code if you want to <em>implement</em> what
+      you see — and even then the snippets are short and well-commented.</p>
+    </details>
+    <details>
+      <summary>What's the difference between RAG and MCP?</summary>
+      <p>RAG is a <em>technique</em>: retrieve relevant text, then ground the LLM with it. MCP is a
+      <em>protocol</em>: a standardised way for any LLM app to talk to any external data source or
+      tool — including a RAG service. Many production systems use both: MCP as the wire, RAG as one of
+      the tools the wire connects to.</p>
+    </details>
+    <details>
+      <summary>Is Agentic RAG the same as "AI agents"?</summary>
+      <p>Mostly yes. "AI agent" is the umbrella term; <em>Agentic RAG</em> is specifically the pattern
+      that combines an agent loop with retrieval-augmented generation, so the agent can both
+      <em>find</em> facts and <em>act</em> on them.</p>
+    </details>
+    <details>
+      <summary>I'm short on time — which deck should I read first?</summary>
+      <p>If you've only got one hour, read <strong>RAG → MCP</strong>, and skip Agentic RAG for later.
+      RAG gives you the mental model for grounding, MCP gives you the mental model for connecting.
+      Agentic RAG is exciting but only fully clicks once those two are in place.</p>
+    </details>
+    <details>
+      <summary>Are these decks vendor-neutral?</summary>
+      <p>Yes — they cover open standards (MCP from Anthropic, but governed openly; W3C WebMCP) and
+      reference multiple model providers (GPT, Claude, Llama, Gemini, DeepSeek), vector DBs
+      (OpenSearch, Pinecone, FAISS, ChromaDB), and frameworks (LangChain, LlamaIndex, FastMCP).</p>
+    </details>
+    <details>
+      <summary>What if I want to build, not just read?</summary>
+      <p>Each deck has worked examples and code snippets in Python / JS that you can copy. The RAG
+      deck shows a full pipeline end-to-end; the MCP deck demonstrates Claude Desktop + Filesystem
+      MCP; the Agentic RAG deck walks through an invoice-payment ADW.</p>
+    </details>
+    <details>
+      <summary>How current is this material?</summary>
+      <p>All three decks reflect the state of the art as of 2026, including the MCP 2026-07-28 RC,
+      WebMCP, modern re-rankers (Cohere v3.5, FlashRank, ColBERT v2), and Agentic Document Workflows.</p>
+    </details>
+  </div>
+
+  <div class="usecase">
+    <div class="uc-label">Tip</div>
+    <div class="uc-title">Use the floating nav bar at the top to jump between decks at any time.</div>
+    <p>Each deck has its own internal scroll-progress bar and a "back to hub" pattern — but you can
+    always return to this index by opening <code>index.html</code>.</p>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p>Zero-to-Hero Hub · curated index for the RAG, MCP, and Agentic RAG visual decks.
+  Built for AI/ML newcomers. <a href="rag-zero-to-hero.html">RAG</a> ·
+  <a href="MCP_Zero_2_hero.html">MCP</a> ·
+  <a href="agentic-rag-zero-to-hero.html">Agentic RAG</a></p>
+</footer>
+
+<!-- ============================================================ SCRIPTS ============================================================ -->
+<script>
+const progressBar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  progressBar.style.width = pct + '%';
+});
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
+
+const navLinks = document.querySelectorAll('nav .nav-links a');
+const dividers = document.querySelectorAll('.section-divider, header.hero');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 120;
+  let activeIdx = 0;
+  dividers.forEach((d, i) => { if (d.offsetTop <= y) activeIdx = i; });
+  navLinks.forEach((a, i) => a.classList.toggle('active', i === activeIdx));
+});
+</script>
+</body>
+</html>
