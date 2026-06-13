@@ -18,7 +18,11 @@ RAG  ──(adds reasoning, planning & tool use)──▶  Agentic RAG  ──(n
   ▲                                                                                                       │
   └──────────────────────────(RAG pipeline lives behind an MCP server as a Resource)────────────────────┘
 ```
+For full, illustrated deep dives and interactive visualizations, visit the companion site:
 
+**Website**: https://mayankramani.github.io/AI/
+
+This site expands each guide below with diagrams, SVG flowcharts, worked examples, and implementation notes.
 ---
 
 ## 📂 Files in This Project
