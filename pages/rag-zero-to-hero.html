@@ -499,7 +499,8 @@ footer a { color: var(--yellow); text-decoration: none; }
     <li><a href="#chunk">Chunking</a></li>
     <li><a href="#types">RAG Types</a></li>
     <li><a href="#vdb">Vector DBs</a></li>
-    <li><a href="#rerank">Re-ranking</a></li>
+    <li><a href="#rerank">Re-ranking</a></li> 
+    <li><a href="#semcache">semantic-cache</a></li>
     <li><a href="#apps">Use Cases</a></li>
     <li><a href="#example">Worked Example</a></li>
     <li><a href="#pitfalls">Pitfalls</a></li>
@@ -2592,6 +2593,140 @@ top3 = ranker.<span class="fn">rerank</span>(<span class="fn">RerankRequest</spa
     <div class="uc-label">The decision tree in one sentence</div>
     <div class="uc-title">FlashRank for chat · Cohere for prod · Cross-encoder for self-hosted quality · LLM-as-judge for offline eval.</div>
     <p>Almost every production RAG team starts with Cohere's managed API to prove value, then graduates to a self-hosted <code>bge-reranker-base</code> cross-encoder once cost/latency matters. Use LLM-as-judge to <em>label</em> a few thousand queries, then distill those labels into the cheap cross-encoder you actually serve.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 11 — SEMANTIC CACHING (Query + Tool Cache, OpenSearch)
+============================================================ -->
+<div class="section-divider fade-in" id="semcache">
+  <div class="section-number">11</div>
+  <h2>Semantic Caching — short circuiting the pipeline</h2>
+  <p>Cache semantically equivalent queries (and tool results) so you avoid repeated embedding, retrieval, and LLM calls for paraphrased requests.</p>
+  <p style="color:var(--text-muted); max-width:760px;">
+    "Semantic caching replaces the exact string key with a meaning based key. Instead of asking 'is this input identical to a stored input?', it asks 'is this input similar enough in meaning to a stored input?'" 
+  </p>
+</div>
+
+<section class="fade-in">
+  <div class="pipeline-wrap">
+    <h4>Where the cache sits — visual</h4>
+    <svg viewBox="0 0 1000 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#ffde00"/>
+        </marker>
+      </defs>
+
+      <!-- User Query -->
+      <rect x="20" y="20" width="160" height="70" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="100" y="52" text-anchor="middle" class="svg-text">👤 User Query</text>
+      <text x="100" y="68" text-anchor="middle" class="svg-text-sm">embed → v_q</text>
+
+      <!-- Cache -->
+      <rect x="220" y="20" width="220" height="70" rx="10" fill="#181c26" stroke="#ab47bc" stroke-width="1.6" class="svg-pulse"/>
+      <text x="330" y="40" text-anchor="middle" class="svg-text" font-size="13">🧠 Semantic Cache</text>
+      <text x="330" y="58" text-anchor="middle" class="svg-text-sm">OpenSearch index: semantic_cache</text>
+
+      <!-- Arrow user -> cache -->
+      <line x1="180" y1="55" x2="220" y2="55" stroke="#ffde00" stroke-width="1.6" marker-end="url(#arrC)"/>
+
+      <!-- Cache hit path -->
+      <rect x="480" y="20" width="160" height="70" rx="10" fill="#0a0c10" stroke="#44a340" stroke-width="1.5"/>
+      <text x="560" y="48" text-anchor="middle" class="svg-text" fill="#44a340">Cache Hit</text>
+      <text x="560" y="66" text-anchor="middle" class="svg-text-sm" fill="#44a340">return cached response</text>
+
+      <line x1="440" y1="55" x2="480" y2="55" stroke="#44a340" stroke-width="1.6" marker-end="url(#arrC)"/>
+
+      <!-- Cache miss path -->
+      <rect x="220" y="110" width="220" height="70" rx="10" fill="#181c26" stroke="#ffde00" stroke-width="1.5"/>
+      <text x="330" y="140" text-anchor="middle" class="svg-text" font-size="13">Miss → Full RAG</text>
+      <text x="330" y="156" text-anchor="middle" class="svg-text-sm">embed → vector search → LLM</text>
+
+      <line x1="330" y1="90" x2="330" y2="110" stroke="#ffde00" stroke-width="1.2" marker-end="url(#arrC)"/>
+
+      <!-- Tool cache inset -->
+      <rect x="720" y="20" width="240" height="160" rx="10" fill="#181c26" stroke="#4fc3f7" stroke-width="1.4"/>
+      <text x="840" y="48" text-anchor="middle" class="svg-text" font-size="13">🔧 Tool Cache (OpenSearch)</text>
+      <text x="840" y="68" text-anchor="middle" class="svg-text-sm">cache tool results by semantic key</text>
+      <text x="840" y="88" text-anchor="middle" class="svg-text-sm">e.g. get_customer_profile(customer_name)</text>
+
+      <!-- arrows -->
+      <line x1="440" y1="140" x2="720" y2="140" stroke="#ab47bc" stroke-width="1.2" marker-end="url(#arrC)"/>
+      <text x="580" y="130" class="svg-text-sm" fill="#ab47bc">store (v_q, response, ts)</text>
+    </svg>
+  </div>
+
+  <h3 style="margin-top:1.25rem;">How it works (short)</h3>
+  <ul>
+    <li>Embed the incoming query with the same model used for ingestion.</li>
+    <li>Search the **semantic_cache** OpenSearch index for the nearest vector; if similarity ≥ threshold → return cached response instantly.</li>
+    <li>On miss → run full RAG, then insert the triple <code>{vector, response, timestamp}</code> into OpenSearch for future hits.</li>
+  </ul>
+
+  <div class="usecase" style="margin-top:1rem;">
+    <div class="uc-label">Why this saves money</div>
+    <div class="uc-title">Intercept paraphrases before they trigger an LLM call</div>
+    <p class="subtitle" style="margin-top:0.5rem; color:var(--text-muted); max-width:760px;">
+      The semantic cache short-circuits the expensive steps (retrieval, prompt assembly, LLM invocation) for repeated or paraphrased queries — especially valuable when a large fraction of traffic are near-duplicates. 
+    </p>
+  </div>
+
+  <h3 style="margin-top:1rem;">OpenSearch-friendly pseudocode (Python)</h3>
+  <pre class="code-block"><span class="cm"># OpenSearch semantic cache: index 'semantic_cache' with a dense_vector field 'vec' and a 'response' text field.</span>
+<span class="kw">import</span> time, numpy as np
+<span class="kw">from</span> opensearchpy <span class="kw">import</span> OpenSearch
+<span class="kw">from</span> sentence_transformers <span class="kw">import</span> SentenceTransformer
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+
+client = OpenSearch([{'host':'localhost','port':9200}])
+model = SentenceTransformer("all-MiniLM-L6-v2")
+THRESH = 0.88
+
+<span class="kw">def</span> embed(text):
+    <span class="kw">return</span> model.encode(text).tolist()
+
+<span class="kw">def</span> cache_lookup(v_q, threshold=THRESH, namespace=None):
+    # OpenSearch kNN search (or script_score cosine) to get nearest cached vector
+    body = {
+      "size": 1,
+      "query": {
+        "knn": {
+          "vec": {
+            "vector": v_q,
+            "k": 1
+          }
+        }
+      }
+    }
+    res = client.search(index="semantic_cache", body=body)
+    hits = res.get("hits", {}).get("hits", [])
+    <span class="kw">if</span> not hits:
+        <span class="kw">return</span> None, 0.0
+    hit = hits[0]["_source"]
+    cached_vec = np.array(hit["vec"])
+    score = float(1 - cosine_similarity([v_q], [cached_vec])[0][0])
+    <span class="kw">if</span> score >= threshold:
+        <span class="kw">return</span> hit["response"], score
+    <span class="kw">return</span> None, score
+
+<span class="kw">def</span> cache_insert(v_q, response, ttl_seconds=3600):
+    doc = {"vec": v_q, "response": response, "ts": int(time.time())}
+    client.index(index="semantic_cache", body=doc, refresh=True)
+  </pre>
+
+  <h3 style="margin-top:1rem;">OpenSearch notes & best practices</h3>
+  <ul>
+    <li><strong>Index design:</strong> use a dedicated `semantic_cache` index with a `dense_vector` field (kNN) and a `ts` timestamp for TTL/ILM policies.</li>
+    <li><strong>Similarity:</strong> OpenSearch kNN returns nearest neighbors; compute cosine similarity client-side (or use script_score) and apply your threshold.</li>
+    <li><strong>TTL / invalidation:</strong> use the `ts` field + an index lifecycle policy or periodic background invalidation to remove stale entries.</li>
+    <li><strong>Personal data:</strong> never cache queries containing PII or account/order identifiers; detect and bypass those before lookup.</li>
+    <li><strong>Tool cache:</strong> store tool-call inputs as normalized keys and tool outputs as cached payloads in the same index (or a separate `tool_cache` index) to short-circuit agent tool calls.</li>
+  </ul>
+
+  <div class="pitfall" style="margin-top:1rem;">
+    <h4>Quick checklist before caching</h4>
+    <p class="subtitle" style="color:var(--text-muted);">Is the answer independent of the user? Is it stable within TTL? Does the query contain personal identifiers? If any answer is no → bypass the cache.</p>
   </div>
 </section>
 
